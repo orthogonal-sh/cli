@@ -6,7 +6,7 @@ export async function loginCommand(options: { key?: string }) {
   
   if (!key) {
     console.log(chalk.yellow("Usage: orth login --key <your-api-key>"));
-    console.log(chalk.gray("\nGet your API key at: https://orthogonal.com/dashboard/settings"));
+    console.log(chalk.gray("\nGet your API key at: https://orthogonal.com/dashboard/settings/api-keys"));
     console.log(chalk.gray("Or set ORTHOGONAL_API_KEY environment variable"));
     return;
   }
