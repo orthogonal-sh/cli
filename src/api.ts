@@ -56,14 +56,22 @@ export interface SearchResponse {
 }
 
 export interface DetailsResponse {
-  api: string;
-  path: string;
-  method: string;
-  description: string;
-  price?: number;
+  api?: string | { name: string; slug: string; description?: string };
+  path?: string;
+  method?: string;
+  description?: string;
+  price?: number | string;
   parameters?: {
     query?: Array<{ name: string; type: string; required: boolean; description?: string }>;
     body?: Array<{ name: string; type: string; required: boolean; description?: string }>;
+  };
+  endpoint?: {
+    path: string;
+    method: string;
+    description?: string;
+    price?: number | string;
+    queryParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
+    bodyParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
   };
 }
 

@@ -35,15 +35,24 @@ export async function apiCommand(slug?: string, path?: string) {
       spinner.stop();
       
       console.log(chalk.bold(`\n${chalk.cyan(slug)}${chalk.white(path)}\n`));
-      console.log(chalk.gray(data.description || "No description"));
       
-      if (data.price) {
-        console.log(chalk.green(`\nPrice: $${data.price}`));
+      // Get description from endpoint object if available
+      const desc = data.description || (data as any).endpoint?.description;
+      console.log(chalk.gray(desc || "No description"));
+      
+      // Get price
+      const price = data.price || (data as any).endpoint?.price;
+      if (price) {
+        console.log(chalk.green(`\nPrice: ${typeof price === 'number' ? '$' + price : price}`));
       }
 
-      if (data.parameters?.query && data.parameters.query.length > 0) {
+      // Get params from nested endpoint object if needed
+      const queryParams = data.parameters?.query || (data as any).endpoint?.queryParams || [];
+      const bodyParams = data.parameters?.body || (data as any).endpoint?.bodyParams || [];
+
+      if (queryParams.length > 0) {
         console.log(chalk.bold("\nQuery Parameters:"));
-        for (const param of data.parameters.query) {
+        for (const param of queryParams) {
           const required = param.required ? chalk.red("*") : "";
           console.log(
             chalk.yellow(`  ${param.name}${required}`) +
@@ -53,9 +62,9 @@ export async function apiCommand(slug?: string, path?: string) {
         }
       }
 
-      if (data.parameters?.body && data.parameters.body.length > 0) {
+      if (bodyParams.length > 0) {
         console.log(chalk.bold("\nBody Parameters:"));
-        for (const param of data.parameters.body) {
+        for (const param of bodyParams) {
           const required = param.required ? chalk.red("*") : "";
           console.log(
             chalk.yellow(`  ${param.name}${required}`) +
@@ -65,8 +74,20 @@ export async function apiCommand(slug?: string, path?: string) {
         }
       }
 
+      // Generate appropriate example
       console.log(chalk.gray("\nExample:"));
-      console.log(chalk.white(`  orth run ${slug} ${path} --query key=value`));
+      if (bodyParams.length > 0) {
+        const exampleBody: Record<string, string> = {};
+        for (const param of bodyParams.slice(0, 3)) {
+          exampleBody[param.name] = param.type === 'object' ? '{}' : `<${param.name}>`;
+        }
+        console.log(chalk.white(`  orth run ${slug} ${path} --body '${JSON.stringify(exampleBody)}'`));
+      } else if (queryParams.length > 0) {
+        const exampleQuery = queryParams.slice(0, 2).map((p: any) => `-q ${p.name}=<value>`).join(' ');
+        console.log(chalk.white(`  orth run ${slug} ${path} ${exampleQuery}`));
+      } else {
+        console.log(chalk.white(`  orth run ${slug} ${path}`));
+      }
       return;
     }
 
