@@ -5,11 +5,6 @@
 
 Simple workflow: search → run
 
-## Full Walkthrough
-![Full Demo](demo-full.gif)
-
-Complete workflow: search → API details → endpoint details → run
-
 ## Web Scraping with Olostep
 ![Olostep](olostep.gif)
 
