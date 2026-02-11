@@ -33,7 +33,32 @@ export async function apiRequest<T = unknown>(
   const data = await res.json() as ApiResponse<T>;
   
   if (!res.ok || data.success === false) {
-    throw new Error(data.error || `API error: ${res.status}`);
+    // Include more details in error message
+    let errorMsg = data.error || `API request failed with status ${res.status}`;
+    
+    // Add any additional error details from the response
+    if ((data as any).message) {
+      errorMsg += `: ${(data as any).message}`;
+    }
+    if ((data as any).data?.error) {
+      errorMsg += ` - ${(data as any).data.error}`;
+    }
+    // Handle Hunter-style errors array
+    if ((data as any).data?.errors && Array.isArray((data as any).data.errors)) {
+      const errors = (data as any).data.errors;
+      for (const err of errors) {
+        if (err.details) {
+          errorMsg += `\n  → ${err.details}`;
+        } else if (err.id) {
+          errorMsg += `\n  → ${err.id}: ${err.code || ''}`;
+        }
+      }
+    }
+    if ((data as any).details) {
+      errorMsg += `\n  Details: ${JSON.stringify((data as any).details)}`;
+    }
+    
+    throw new Error(errorMsg);
   }
   
   // Return the whole response, not just data field
