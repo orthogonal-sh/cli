@@ -42,6 +42,9 @@ export async function apiRequest<T = unknown>(
     }
     if ((data as any).data?.error) {
       errorMsg += ` - ${(data as any).data.error}`;
+      if ((data as any).data?.message) {
+        errorMsg += `: ${(data as any).data.message}`;
+      }
     }
     // Handle Hunter-style errors array
     if ((data as any).data?.errors && Array.isArray((data as any).data.errors)) {
