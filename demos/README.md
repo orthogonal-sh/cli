@@ -20,11 +20,6 @@ Scrape any webpage to markdown
 
 Find emails for a domain
 
-## AI Search with Andi
-![Andi](andi.gif)
-
-Natural language web search
-
 ## x402 Direct Payment
 ![x402](x402.gif)
 
