@@ -2,6 +2,8 @@
 
 CLI to access all APIs on the Orthogonal platform.
 
+![Demo](demo.gif)
+
 ## Installation
 
 ```bash
