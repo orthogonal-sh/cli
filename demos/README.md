@@ -1,0 +1,36 @@
+# Orthogonal CLI Demos
+
+## Main Demo
+![Demo](demo.gif)
+
+Simple workflow: search → run
+
+## Full Walkthrough
+![Full Demo](demo-full.gif)
+
+Complete workflow: search → API details → endpoint details → run
+
+## Web Scraping with Olostep
+![Olostep](olostep.gif)
+
+Scrape any webpage to markdown
+
+## Email Finder with Tomba
+![Tomba](tomba.gif)
+
+Find emails for a domain
+
+## AI Search with Andi
+![Andi](andi.gif)
+
+Natural language web search
+
+## x402 Direct Payment
+![x402](x402.gif)
+
+Get payment details for agent wallets
+
+## Code Generation
+![Code](code.gif)
+
+Generate integration code in TypeScript, Python, or cURL
