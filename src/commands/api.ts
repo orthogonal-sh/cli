@@ -110,6 +110,8 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       // x402 direct payment info
       if (options?.x402 || options?.x402Full) {
         const x402Url = `https://x402.orth.sh/${slug}${path}`;
+        // Determine HTTP method: POST if body params, GET otherwise
+        const method = bodyParams.length > 0 ? 'POST' : 'GET';
         
         if (options?.x402 && !options?.x402Full) {
           // Minimal output - just the URL
@@ -117,10 +119,16 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         } else {
           // Full output - actually call the endpoint and get the 402 response
           try {
-            const response = await fetch(x402Url);
+            const fetchOptions: RequestInit = { method };
+            if (method === 'POST') {
+              fetchOptions.headers = { 'Content-Type': 'application/json' };
+              fetchOptions.body = '{}';
+            }
+            const response = await fetch(x402Url, fetchOptions);
             const responseData = await response.json();
             console.log(chalk.bold.magenta("\n── x402 Payment Details ──\n"));
             console.log(chalk.cyan(`URL: ${x402Url}`));
+            console.log(chalk.yellow(`Method: ${method}`));
             console.log(chalk.gray(`Status: ${response.status}\n`));
             console.log(JSON.stringify(responseData, null, 2));
           } catch (err) {
