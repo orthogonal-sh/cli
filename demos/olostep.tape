@@ -7,8 +7,8 @@ Set Width 900
 Set Height 500
 Set Theme "Catppuccin Frappe"
 Set Padding 20
-Set Margin 20
-Set MarginFill "#232634"
+Set Margin 40
+Set MarginFill "gradient-bg.png"
 Set BorderRadius 10
 
 Hide
