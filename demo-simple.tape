@@ -7,7 +7,7 @@ Set Shell "zsh"
 Set FontSize 18
 Set Width 900
 Set Height 500
-Set Theme "Dracula"
+Set Theme "Catppuccin Frappe"
 Set Padding 30
 
 # Setup
