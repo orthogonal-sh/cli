@@ -9,6 +9,9 @@ Set Width 1000
 Set Height 600
 Set Theme "Catppuccin Mocha"
 Set Padding 20
+Set Margin 20
+Set MarginFill "#1e1e2e"
+Set BorderRadius 10
 
 # Setup
 Hide

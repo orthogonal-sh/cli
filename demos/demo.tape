@@ -8,7 +8,10 @@ Set FontSize 18
 Set Width 900
 Set Height 500
 Set Theme "Catppuccin Frappe"
-Set Padding 30
+Set Padding 20
+Set Margin 20
+Set MarginFill "#232634"
+Set BorderRadius 10
 
 # Setup
 Hide
