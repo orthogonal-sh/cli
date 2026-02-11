@@ -109,34 +109,23 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
 
       // x402 direct payment info
       if (options?.x402 || options?.x402Full) {
-        const x402Url = `https://api.orth.sh/x402/run`;
+        const x402Url = `https://x402.orth.sh/${slug}${path}`;
         
         if (options?.x402 && !options?.x402Full) {
           // Minimal output - just the URL
           console.log(`\n${x402Url}`);
         } else {
-          // Full output with all details
-          const priceStr = String(price || '0').replace(/[$,]/g, '');
-          const priceNum = parseFloat(priceStr) || 0;
-          const priceUsdc = (priceNum * 1_000_000).toFixed(0); // USDC has 6 decimals
-          
-          console.log(chalk.bold.magenta("\n── x402 Direct Payment ──\n"));
-          console.log(chalk.gray("Pay per request without API key using x402 protocol."));
-          console.log(chalk.gray("Your agent can pay directly from its wallet.\n"));
-          
-          console.log(chalk.white("Endpoint:    ") + chalk.cyan(x402Url));
-          console.log(chalk.white("Network:     ") + chalk.yellow("Base (Chain ID 8453)"));
-          console.log(chalk.white("Token:       ") + chalk.yellow("USDC (0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913)"));
-          console.log(chalk.white("Price:       ") + chalk.green(`${priceUsdc} USDC units ($${priceNum.toFixed(4)})`));
-          console.log(chalk.white("Payee:       ") + chalk.gray("Returned in 402 response header"));
-          
-          console.log(chalk.gray("\nFlow:"));
-          console.log(chalk.gray("  1. POST to endpoint → receive 402 with payment details"));
-          console.log(chalk.gray("  2. Sign payment with agent wallet"));
-          console.log(chalk.gray("  3. Retry request with X-PAYMENT header"));
-          
-          console.log(chalk.gray("\nRequest body:"));
-          console.log(chalk.white(`  {"api": "${slug}", "path": "${path}", "body": {...}, "query": {...}}`));
+          // Full output - actually call the endpoint and get the 402 response
+          try {
+            const response = await fetch(x402Url);
+            const responseData = await response.json();
+            console.log(chalk.bold.magenta("\n── x402 Payment Details ──\n"));
+            console.log(chalk.cyan(`URL: ${x402Url}`));
+            console.log(chalk.gray(`Status: ${response.status}\n`));
+            console.log(JSON.stringify(responseData, null, 2));
+          } catch (err) {
+            console.log(chalk.red(`\nFailed to fetch x402 details: ${err}`));
+          }
         }
       }
       
