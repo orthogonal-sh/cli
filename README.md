@@ -2,7 +2,7 @@
 
 CLI to access all APIs on the Orthogonal platform.
 
-![Demo](demo.gif)
+![Demo](demos/demo.gif)
 
 ## Installation
 
