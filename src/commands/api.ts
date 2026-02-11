@@ -7,21 +7,34 @@ export async function apiCommand(slug?: string, path?: string) {
 
   try {
     if (!slug) {
-      // List all APIs
-      const data: SearchResponse = await search("*", 50);
+      // List all APIs - search multiple terms to get broader coverage
+      const searches = await Promise.all([
+        search("api", 50),
+        search("data", 50),
+        search("search", 50),
+        search("email", 50),
+      ]);
       spinner.stop();
+      
+      // Merge and dedupe results
+      const allResults = searches.flatMap(s => s.results || []);
+      const data: SearchResponse = {
+        results: allResults,
+        count: allResults.length,
+        apisCount: new Set(allResults.map(r => r.slug)).size,
+      };
       
       console.log(chalk.bold("\nAvailable APIs:\n"));
       
       const seen = new Set<string>();
       for (const api of data.results) {
-        if (seen.has(api.slug)) continue;
+        if (!api.slug || seen.has(api.slug)) continue;
         seen.add(api.slug);
         
         console.log(
           chalk.cyan.bold(api.slug.padEnd(20)) +
-          chalk.white(api.name) +
-          chalk.gray(` (${api.endpoints.length} endpoints)`)
+          chalk.white(api.name || "") +
+          chalk.gray(` (${api.endpoints?.length || 0} endpoints)`)
         );
       }
       
