@@ -15,6 +15,8 @@ Set BorderRadius 10
 
 # Setup
 Hide
+Type "source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+Enter
 Type "export ORTHOGONAL_API_KEY=orth_live_Brzr2RVLqEuKMYspF2zsJfY6Z713sQQ4"
 Enter
 Type "cd /Users/orth/Documents/orthogonal/cli"
