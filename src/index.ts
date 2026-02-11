@@ -42,6 +42,7 @@ program
 program
   .command("api [slug] [path]")
   .description("List APIs or show details for a specific API/endpoint")
+  .option("--x402", "Show x402 direct payment details for agent use")
   .action(apiCommand);
 
 // Run command
