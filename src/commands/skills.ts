@@ -751,7 +751,7 @@ export async function skillsSubmitCommand(
     );
     console.log(
       chalk.gray(
-        `Dashboard: https://orth.sh/dashboard/skills`,
+        `Dashboard: https://orthogonal.com/dashboard/skills`,
       ),
     );
   } catch (error) {
@@ -833,7 +833,7 @@ export async function skillsPublishCommand(
   );
   console.log(
     chalk.gray(
-      "\nOr manage from the dashboard: https://orth.sh/dashboard/skills",
+      "\nOr manage from the dashboard: https://orthogonal.com/dashboard/skills",
     ),
   );
 }
