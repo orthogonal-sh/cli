@@ -46,14 +46,15 @@ interface SkillDetailResponse {
   skill: SkillResponse;
 }
 
-// Agent skill directories (matching skillfish conventions)
+// Agent skill directories (user-level global skills)
 const AGENT_DIRS: Record<string, string> = {
   cursor: path.join(os.homedir(), ".cursor", "skills"),
   "claude-code": path.join(os.homedir(), ".claude", "skills"),
   copilot: path.join(os.homedir(), ".github", "skills"),
   windsurf: path.join(os.homedir(), ".codeium", "windsurf", "skills"),
-  codex: path.join(os.homedir(), ".codex", "skills"),
+  codex: path.join(os.homedir(), ".agents", "skills"), // Codex uses ~/.agents/skills/ for user-scoped skills
   gemini: path.join(os.homedir(), ".gemini", "skills"),
+  openclaw: path.join(os.homedir(), ".openclaw", "skills"),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
