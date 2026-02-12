@@ -1,7 +1,7 @@
 {
   "name": "orthogonal-cli",
-  "version": "0.1.0",
-  "description": "CLI to access all APIs on the Orthogonal platform",
+  "version": "0.2.0",
+  "description": "CLI to access all APIs and skills on the Orthogonal platform",
   "main": "dist/index.js",
   "bin": {
     "orth": "./dist/index.js"
@@ -10,9 +10,14 @@
     "build": "tsc",
     "dev": "tsc -w",
     "start": "node dist/index.js",
-    "test": "node dist/index.js"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
-  "keywords": ["orthogonal", "api", "cli"],
+  "keywords": [
+    "orthogonal",
+    "api",
+    "cli"
+  ],
   "author": "Orthogonal",
   "license": "MIT",
   "dependencies": {
@@ -24,7 +29,8 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=18"
