@@ -766,6 +766,108 @@ export async function skillsSubmitCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// orth skills update <slug> [path]
+// ─────────────────────────────────────────────────────────────────────────────
+export async function skillsUpdateCommand(
+  slug: string,
+  inputPath: string | undefined,
+  options: { name?: string; tags?: string },
+) {
+  const dirPath = inputPath ? path.resolve(inputPath) : process.cwd();
+  const spinner = ora("Reading skill files...").start();
+
+  try {
+    // Validate directory exists
+    if (!fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory()) {
+      spinner.stop();
+      console.error(chalk.red(`Error: ${dirPath} is not a directory`));
+      process.exit(1);
+    }
+
+    // Read all files
+    const files = readFilesRecursive(dirPath);
+
+    if (files.length === 0) {
+      spinner.stop();
+      console.error(chalk.red("Error: No files found in the directory"));
+      process.exit(1);
+    }
+
+    // Validate SKILL.md exists
+    const primaryFile = files.find((f) => f.isPrimary);
+    if (!primaryFile) {
+      spinner.stop();
+      console.error(
+        chalk.red("Error: No SKILL.md found in the root of the directory"),
+      );
+      process.exit(1);
+    }
+
+    // Parse frontmatter
+    const frontmatter = parseFrontmatter(primaryFile.content);
+    const skillName = options.name || frontmatter.name;
+    const skillDescription = frontmatter.description;
+
+    // Check size limits
+    const totalSize = files.reduce((acc, f) => acc + f.content.length, 0);
+    if (files.length > 50) {
+      spinner.stop();
+      console.error(chalk.red("Error: Too many files (max 50)"));
+      process.exit(1);
+    }
+    if (totalSize > 1024 * 1024) {
+      spinner.stop();
+      console.error(chalk.red("Error: Total content too large (max 1MB)"));
+      process.exit(1);
+    }
+
+    spinner.text = "Updating skill...";
+
+    const tags = options.tags
+      ? options.tags.split(",").map((t) => t.trim())
+      : undefined;
+
+    const updatePayload: Record<string, unknown> = {
+      files: files.map((f) => ({
+        filePath: f.filePath,
+        content: f.content,
+        isPrimary: f.isPrimary,
+      })),
+    };
+
+    if (skillName) updatePayload.name = skillName;
+    if (skillDescription) updatePayload.description = skillDescription;
+    if (tags) updatePayload.tags = tags;
+
+    const data = await apiRequest<{ message: string; skill: SkillResponse }>(
+      `/skills/${slug}`,
+      {
+        method: "PUT",
+        body: updatePayload,
+      },
+    );
+
+    spinner.stop();
+
+    console.log(chalk.green(`\n✓ Skill updated successfully`));
+    console.log(chalk.bold(`\n${data.skill.name}`));
+    console.log(chalk.gray(`  Slug: ${data.skill.slug}`));
+    console.log(chalk.gray(`  Files: ${files.length}`));
+    if (data.skill.description) {
+      console.log(chalk.gray(`  ${data.skill.description.slice(0, 100)}`));
+    }
+  } catch (error) {
+    spinner.stop();
+    console.error(
+      chalk.red(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      ),
+    );
+    process.exit(1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // orth skills request-verification <slug>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsRequestVerificationCommand(slug: string) {
