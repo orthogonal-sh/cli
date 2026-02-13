@@ -66,7 +66,7 @@ afterEach(() => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills list
+// ortho skills list
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsListCommand", () => {
   it("should list skills from API", async () => {
@@ -110,7 +110,7 @@ describe("skillsListCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills search
+// ortho skills search
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsSearchCommand", () => {
   it("should search skills with query", async () => {
@@ -154,7 +154,7 @@ describe("skillsSearchCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills show
+// ortho skills show
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsShowCommand", () => {
   it("should show skill details", async () => {
@@ -193,7 +193,7 @@ describe("skillsShowCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills create
+// ortho skills create
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsCreateCommand", () => {
   it("should create skill from GitHub URL", async () => {
@@ -255,7 +255,7 @@ describe("skillsCreateCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills install (add)
+// ortho skills install (add)
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsInstallCommand", () => {
   it("should fetch skill from API", async () => {
@@ -286,7 +286,7 @@ describe("skillsInstallCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills init
+// ortho skills init
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsInitCommand", () => {
   let tmpDir: string;
@@ -342,7 +342,7 @@ describe("skillsInitCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills submit
+// ortho skills submit
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsSubmitCommand", () => {
   let tmpDir: string;
@@ -426,7 +426,7 @@ description: test
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills request-verification
+// ortho skills request-verification
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsRequestVerificationCommand", () => {
   it("should request verification for a skill", async () => {
@@ -467,7 +467,7 @@ describe("skillsRequestVerificationCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills publish (deprecated)
+// ortho skills publish (deprecated)
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsPublishCommand", () => {
   it("should show deprecation message and redirect to request-verification", async () => {
@@ -482,7 +482,7 @@ describe("skillsPublishCommand", () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills request
+// ortho skills request
 // ─────────────────────────────────────────────────────────────────────────────
 describe("skillsRequestCommand", () => {
   it("should submit GitHub-based skill request", async () => {

@@ -43,7 +43,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         );
       }
       
-      console.log(chalk.gray("\nRun 'orth api <slug>' to see endpoints for an API"));
+      console.log(chalk.gray("\nRun 'ortho api <slug>' to see endpoints for an API"));
       return;
     }
 
@@ -148,7 +148,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
     
     if (!api) {
       console.log(chalk.yellow(`API '${slug}' not found.`));
-      console.log(chalk.gray("Run 'orth api' to see available APIs"));
+      console.log(chalk.gray("Run 'ortho api' to see available APIs"));
       return;
     }
 
@@ -163,8 +163,8 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       }
     }
 
-    console.log(chalk.gray("\nRun 'orth api " + slug + " <path>' for endpoint details"));
-    console.log(chalk.gray("Run 'orth run " + slug + " <path>' to call an endpoint"));
+    console.log(chalk.gray("\nRun 'ortho api " + slug + " <path>' for endpoint details"));
+    console.log(chalk.gray("Run 'ortho run " + slug + " <path>' to call an endpoint"));
 
   } catch (error) {
     spinner.stop();
