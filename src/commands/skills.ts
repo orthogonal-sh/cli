@@ -804,6 +804,8 @@ export async function skillsUpdateCommand(
     }
 
     // Parse frontmatter
+    // Note: Unlike submit, name/description are optional for updates
+    // We only send them if provided (to allow partial updates)
     const frontmatter = parseFrontmatter(primaryFile.content);
     const skillName = options.name || frontmatter.name;
     const skillDescription = frontmatter.description;
