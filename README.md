@@ -8,10 +8,10 @@ CLI to access all APIs and agent skills on the Orthogonal platform.
 
 ```bash
 # Install globally
-npm install -g ortho
+npm install -g @orth/cli
 
 # Or use npx
-npx ortho <command>
+npx @orth/cli <command>
 ```
 
 ## Authentication
