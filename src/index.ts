@@ -39,7 +39,7 @@ function asyncAction(fn: (...args: any[]) => Promise<void>) {
 const program = new Command();
 
 program
-  .name("ortho")
+  .name("orth")
   .description("CLI to access all APIs and skills on the Orthogonal platform")
   .version("0.2.0");
 
