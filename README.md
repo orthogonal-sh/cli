@@ -2,16 +2,16 @@
 
 CLI to access all APIs and agent skills on the Orthogonal platform.
 
-![Demo](demos/demo.gif)
+![Demo](https://raw.githubusercontent.com/orthogonal-sh/cli/main/demos/demo.gif)
 
 ## Installation
 
 ```bash
 # Install globally
-npm install -g @orth/cli
+npm install -g ortho
 
 # Or use npx
-npx @orth/cli <command>
+npx ortho <command>
 ```
 
 ## Authentication
