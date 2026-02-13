@@ -43,8 +43,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         );
       }
       
-      console.log(chalk.gray("\nRun 'ortho api <slug>' to see all endpoints for an API"));
-      console.log(chalk.gray("Run 'ortho api <slug> <path>' to see endpoint details"));
+      console.log(chalk.gray("\nRun 'ortho api <slug>' to see endpoints for an API"));
       return;
     }
 
