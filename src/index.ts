@@ -39,7 +39,7 @@ function asyncAction(fn: (...args: any[]) => Promise<void>) {
 const program = new Command();
 
 program
-  .name("orth")
+  .name("ortho")
   .description("CLI to access all APIs and skills on the Orthogonal platform")
   .version("0.2.0");
 
@@ -264,7 +264,7 @@ skillsGroup
 // ─────────────────────────────────────────────────────────────────────────────
 program
   .command("search <query>")
-  .description("Search for APIs (alias for 'orth api search')")
+  .description("Search for APIs (alias for 'ortho api search')")
   .option("-l, --limit <number>", "Max results", "10")
   .action(asyncAction(async (query: string, options) => {
     trackEvent("search", { query });
@@ -273,7 +273,7 @@ program
 
 program
   .command("run <api> <path>")
-  .description("Call an API endpoint (alias for 'orth api run')")
+  .description("Call an API endpoint (alias for 'ortho api run')")
   .option("-X, --method <method>", "HTTP method", "GET")
   .option("-q, --query <params...>", "Query params (key=value)")
   .option("-b, --body <json>", "Request body JSON")
@@ -286,7 +286,7 @@ program
 
 program
   .command("code <api> <path>")
-  .description("Generate integration code (alias for 'orth api code')")
+  .description("Generate integration code (alias for 'ortho api code')")
   .option(
     "-l, --lang <language>",
     "Language: typescript, python, curl",

@@ -40,8 +40,8 @@ export async function searchCommand(query: string, options: { limit: string }) {
       console.log();
     }
 
-    console.log(chalk.gray(`Run 'orth api <slug>' to see all endpoints for an API`));
-    console.log(chalk.gray(`Run 'orth run <api> <path>' to call an endpoint`));
+    console.log(chalk.gray(`Run 'ortho api <slug>' to see all endpoints for an API`));
+    console.log(chalk.gray(`Run 'ortho run <api> <path>' to call an endpoint`));
 
   } catch (error) {
     spinner.stop();

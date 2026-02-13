@@ -18,16 +18,16 @@ npx @orth/cli <command>
 
 ```bash
 # Login with API key
-orth login --key orth_live_your_key
+ortho login --key orth_live_your_key
 
 # Or set environment variable
 export ORTHOGONAL_API_KEY=orth_live_your_key
 
 # Check auth status
-orth whoami
+ortho whoami
 
 # Logout
-orth logout
+ortho logout
 ```
 
 ## API Commands
@@ -36,50 +36,50 @@ orth logout
 
 ```bash
 # Search for APIs
-orth api search "email finder"
-orth api search "web scraping" --limit 20
+ortho api search "email finder"
+ortho api search "web scraping" --limit 20
 
 # List all APIs
-orth api list
+ortho api list
 
 # Show API endpoints
-orth api show hunter
+ortho api show hunter
 
 # Show endpoint details
-orth api show hunter /v2/domain-search
+ortho api show hunter /v2/domain-search
 ```
 
 ### Call APIs
 
 ```bash
 # GET request with query params
-orth api run hunter /v2/domain-search -q domain=stripe.com
+ortho api run hunter /v2/domain-search -q domain=stripe.com
 
 # POST request with body
-orth api run olostep /v1/scrapes --body '{"url": "https://stripe.com"}'
+ortho api run olostep /v1/scrapes --body '{"url": "https://stripe.com"}'
 
 # Raw output for piping
-orth api run hunter /v2/domain-search -q domain=stripe.com --raw | jq '.emails'
+ortho api run hunter /v2/domain-search -q domain=stripe.com --raw | jq '.emails'
 ```
 
 ### Generate Code
 
 ```bash
 # TypeScript (default)
-orth api code hunter /v2/domain-search
+ortho api code hunter /v2/domain-search
 
 # Python
-orth api code hunter /v2/domain-search --lang python
+ortho api code hunter /v2/domain-search --lang python
 
 # cURL
-orth api code hunter /v2/domain-search --lang curl
+ortho api code hunter /v2/domain-search --lang curl
 ```
 
 ### Request an API
 
 ```bash
 # Request an API to be added to the platform
-orth api request https://docs.example.com/api -d "Weather data API"
+ortho api request https://docs.example.com/api -d "Weather data API"
 ```
 
 ## Skills Commands
@@ -88,23 +88,23 @@ orth api request https://docs.example.com/api -d "Weather data API"
 
 ```bash
 # List verified & discoverable skills
-orth skills list
+ortho skills list
 
 # Search for skills
-orth skills search "react best practices"
+ortho skills search "react best practices"
 
 # Show skill details
-orth skills show owner/skill-name
+ortho skills show owner/skill-name
 ```
 
 ### Install Skills
 
 ```bash
 # Install a skill to all supported agents
-orth skills add owner/skill-name
+ortho skills add owner/skill-name
 
 # Install for a specific agent only
-orth skills add owner/skill-name --agent cursor
+ortho skills add owner/skill-name --agent cursor
 ```
 
 Installs to 7 agent skill directories:
@@ -123,23 +123,23 @@ Installs to 7 agent skill directories:
 
 ```bash
 # Initialize a new skill from template
-orth skills init my-skill
-orth skills init my-skill --bare  # SKILL.md only, no subdirectories
+ortho skills init my-skill
+ortho skills init my-skill --bare  # SKILL.md only, no subdirectories
 
 # Create a skill from a GitHub repo
-orth skills create https://github.com/owner/repo
-orth skills create owner/repo --path skills/my-skill --ref main
+ortho skills create https://github.com/owner/repo
+ortho skills create owner/repo --path skills/my-skill --ref main
 
 # Submit a local skill to the platform
-orth skills submit ./my-skill
-orth skills submit --name "My Skill" --tags "react,testing"
+ortho skills submit ./my-skill
+ortho skills submit --name "My Skill" --tags "react,testing"
 
 # Request verification (required before discoverability)
-orth skills request-verification owner/my-skill
+ortho skills request-verification owner/my-skill
 
 # Request a skill to be added (by description or GitHub URL)
-orth skills request "A skill for React testing patterns"
-orth skills request https://github.com/owner/cool-skill
+ortho skills request "A skill for React testing patterns"
+ortho skills request https://github.com/owner/cool-skill
 ```
 
 ### Verification Workflow
@@ -152,20 +152,20 @@ orth skills request https://github.com/owner/cool-skill
 
 ```bash
 # Check balance
-orth balance
+ortho balance
 
 # View usage
-orth usage --limit 20
+ortho usage --limit 20
 ```
 
 ## Shorthand Aliases
 
-These top-level commands are aliases for their `orth api` counterparts:
+These top-level commands are aliases for their `ortho api` counterparts:
 
 ```bash
-orth search "query"          # → orth api search "query"
-orth run slug /path          # → orth api run slug /path
-orth code slug /path         # → orth api code slug /path
+ortho search "query"          # → ortho api search "query"
+ortho run slug /path          # → ortho api run slug /path
+ortho code slug /path         # → ortho api code slug /path
 ```
 
 ## Development

@@ -28,7 +28,7 @@ export function clearApiKey(): void {
 export function requireApiKey(): string {
   const key = getApiKey();
   if (!key) {
-    console.error("Error: Not authenticated. Run 'orth login' first or set ORTHOGONAL_API_KEY.");
+    console.error("Error: Not authenticated. Run 'ortho login' first or set ORTHOGONAL_API_KEY.");
     process.exit(1);
   }
   return key;

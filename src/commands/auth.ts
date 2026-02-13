@@ -32,7 +32,7 @@ export async function whoamiCommand() {
   
   if (!key) {
     console.log(chalk.yellow("Not authenticated"));
-    console.log(chalk.gray("Run 'orth login' to authenticate"));
+    console.log(chalk.gray("Run 'ortho login' to authenticate"));
     return;
   }
 
