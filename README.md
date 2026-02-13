@@ -7,16 +7,11 @@ CLI to access all APIs and agent skills on the Orthogonal platform.
 ## Installation
 
 ```bash
-# From npm
-npm install -g orthogonal-cli
+# Install globally
+npm install -g @orth/cli
 
 # Or use npx
-npx orthogonal-cli <command>
-
-# Local development
-npm install
-npm run build
-node dist/index.js <command>
+npx @orth/cli <command>
 ```
 
 ## Authentication
