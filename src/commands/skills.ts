@@ -58,7 +58,7 @@ const AGENT_DIRS: Record<string, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills list
+// orth skills list
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsListCommand(options: { limit: string }) {
   const spinner = ora("Loading skills...").start();
@@ -107,10 +107,10 @@ export async function skillsListCommand(options: { limit: string }) {
     }
 
     console.log(
-      chalk.gray("Run 'ortho skills show <slug>' to see skill details"),
+      chalk.gray("Run 'orth skills show <slug>' to see skill details"),
     );
     console.log(
-      chalk.gray("Run 'ortho skills add <slug>' to add a skill locally"),
+      chalk.gray("Run 'orth skills add <slug>' to add a skill locally"),
     );
   } catch (error) {
     spinner.stop();
@@ -124,7 +124,7 @@ export async function skillsListCommand(options: { limit: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills search <query>
+// orth skills search <query>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsSearchCommand(
   query: string,
@@ -163,7 +163,7 @@ export async function skillsSearchCommand(
       console.log();
     }
 
-    console.log(chalk.gray("Run 'ortho skills show <slug>' for full details"));
+    console.log(chalk.gray("Run 'orth skills show <slug>' for full details"));
   } catch (error) {
     spinner.stop();
     console.error(
@@ -176,7 +176,7 @@ export async function skillsSearchCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills show <slug>
+// orth skills show <slug>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsShowCommand(slug: string) {
   const spinner = ora("Loading skill...").start();
@@ -245,7 +245,7 @@ export async function skillsShowCommand(slug: string) {
       console.log(chalk.white(`  ${skill.installCommand}`));
     }
     console.log(
-      chalk.gray(`\nRun 'ortho skills add ${skill.slug}' to add locally`),
+      chalk.gray(`\nRun 'orth skills add ${skill.slug}' to add locally`),
     );
   } catch (error) {
     spinner.stop();
@@ -259,7 +259,7 @@ export async function skillsShowCommand(slug: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills create <githubRepo>
+// orth skills create <githubRepo>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsCreateCommand(
   githubRepo: string,
@@ -321,7 +321,7 @@ export async function skillsCreateCommand(
     );
     console.log(
       chalk.white(
-        `To request verification: ${chalk.cyan(`ortho skills request-verification ${data.skill.slug}`)}`,
+        `To request verification: ${chalk.cyan(`orth skills request-verification ${data.skill.slug}`)}`,
       ),
     );
     console.log(
@@ -341,7 +341,7 @@ export async function skillsCreateCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills add <slug>
+// orth skills add <slug>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsInstallCommand(
   slug: string,
@@ -448,7 +448,7 @@ export async function skillsInstallCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills init [name]
+// orth skills init [name]
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Known binary/large file extensions to skip when reading local files
@@ -550,7 +550,7 @@ Describe the next step.
     console.log(chalk.bold("\nNext steps:"));
     console.log(chalk.white("  1. Edit SKILL.md with your skill's instructions"));
     console.log(chalk.white("  2. Add any supporting files to scripts/, references/, or assets/"));
-    console.log(chalk.white(`  3. Submit to Orthogonal: ${chalk.cyan(`ortho skills submit ${dirPath}`)}`));
+    console.log(chalk.white(`  3. Submit to Orthogonal: ${chalk.cyan(`orth skills submit ${dirPath}`)}`));
   } catch (error) {
     console.error(
       chalk.red(
@@ -562,7 +562,7 @@ Describe the next step.
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills submit [path]
+// orth skills submit [path]
 // ─────────────────────────────────────────────────────────────────────────────
 
 function readFilesRecursive(
@@ -658,7 +658,7 @@ export async function skillsSubmitCommand(
         chalk.red("Error: No SKILL.md found in the root of the directory"),
       );
       console.log(
-        chalk.gray("Run 'ortho skills init' to create a skill template"),
+        chalk.gray("Run 'orth skills init' to create a skill template"),
       );
       process.exit(1);
     }
@@ -741,7 +741,7 @@ export async function skillsSubmitCommand(
     );
     console.log(
       chalk.white(
-        `To request verification: ${chalk.cyan(`ortho skills request-verification ${data.skill.slug}`)}`,
+        `To request verification: ${chalk.cyan(`orth skills request-verification ${data.skill.slug}`)}`,
       ),
     );
     console.log(
@@ -766,7 +766,111 @@ export async function skillsSubmitCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills request-verification <slug>
+// orth skills update <slug> [path]
+// ─────────────────────────────────────────────────────────────────────────────
+export async function skillsUpdateCommand(
+  slug: string,
+  inputPath: string | undefined,
+  options: { name?: string; tags?: string },
+) {
+  const dirPath = inputPath ? path.resolve(inputPath) : process.cwd();
+  const spinner = ora("Reading skill files...").start();
+
+  try {
+    // Validate directory exists
+    if (!fs.existsSync(dirPath) || !fs.statSync(dirPath).isDirectory()) {
+      spinner.stop();
+      console.error(chalk.red(`Error: ${dirPath} is not a directory`));
+      process.exit(1);
+    }
+
+    // Read all files
+    const files = readFilesRecursive(dirPath);
+
+    if (files.length === 0) {
+      spinner.stop();
+      console.error(chalk.red("Error: No files found in the directory"));
+      process.exit(1);
+    }
+
+    // Validate SKILL.md exists
+    const primaryFile = files.find((f) => f.isPrimary);
+    if (!primaryFile) {
+      spinner.stop();
+      console.error(
+        chalk.red("Error: No SKILL.md found in the root of the directory"),
+      );
+      process.exit(1);
+    }
+
+    // Parse frontmatter
+    // Note: Unlike submit, name/description are optional for updates
+    // We only send them if provided (to allow partial updates)
+    const frontmatter = parseFrontmatter(primaryFile.content);
+    const skillName = options.name || frontmatter.name;
+    const skillDescription = frontmatter.description;
+
+    // Check size limits
+    const totalSize = files.reduce((acc, f) => acc + f.content.length, 0);
+    if (files.length > 50) {
+      spinner.stop();
+      console.error(chalk.red("Error: Too many files (max 50)"));
+      process.exit(1);
+    }
+    if (totalSize > 1024 * 1024) {
+      spinner.stop();
+      console.error(chalk.red("Error: Total content too large (max 1MB)"));
+      process.exit(1);
+    }
+
+    spinner.text = "Updating skill...";
+
+    const tags = options.tags
+      ? options.tags.split(",").map((t) => t.trim())
+      : undefined;
+
+    const updatePayload: Record<string, unknown> = {
+      files: files.map((f) => ({
+        filePath: f.filePath,
+        content: f.content,
+        isPrimary: f.isPrimary,
+      })),
+    };
+
+    if (skillName) updatePayload.name = skillName;
+    if (skillDescription) updatePayload.description = skillDescription;
+    if (tags) updatePayload.tags = tags;
+
+    const data = await apiRequest<{ message: string; skill: SkillResponse }>(
+      `/skills/${slug}`,
+      {
+        method: "PUT",
+        body: updatePayload,
+      },
+    );
+
+    spinner.stop();
+
+    console.log(chalk.green(`\n✓ Skill updated successfully`));
+    console.log(chalk.bold(`\n${data.skill.name}`));
+    console.log(chalk.gray(`  Slug: ${data.skill.slug}`));
+    console.log(chalk.gray(`  Files: ${files.length}`));
+    if (data.skill.description) {
+      console.log(chalk.gray(`  ${data.skill.description.slice(0, 100)}`));
+    }
+  } catch (error) {
+    spinner.stop();
+    console.error(
+      chalk.red(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      ),
+    );
+    process.exit(1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// orth skills request-verification <slug>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsRequestVerificationCommand(slug: string) {
   const spinner = ora("Submitting verification request...").start();
@@ -810,7 +914,7 @@ export async function skillsRequestVerificationCommand(slug: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills publish <slug> (deprecated - redirects to request-verification)
+// orth skills publish <slug> (deprecated - redirects to request-verification)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsPublishCommand(
   slug: string,
@@ -823,7 +927,7 @@ export async function skillsPublishCommand(
   );
   console.log(
     chalk.white(
-      `\nTo request your skill to be verified, run:\n  ${chalk.cyan(`ortho skills request-verification ${slug}`)}`,
+      `\nTo request your skill to be verified, run:\n  ${chalk.cyan(`orth skills request-verification ${slug}`)}`,
     ),
   );
   console.log(
@@ -839,7 +943,7 @@ export async function skillsPublishCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills request <input>
+// orth skills request <input>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsRequestCommand(input: string) {
   const spinner = ora("Submitting skill request...").start();

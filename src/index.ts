@@ -17,6 +17,7 @@ import {
   skillsRequestCommand,
   skillsInitCommand,
   skillsSubmitCommand,
+  skillsUpdateCommand,
   skillsRequestVerificationCommand,
 } from "./commands/skills.js";
 import { apiRequestCommand } from "./commands/apiRequest.js";
@@ -209,6 +210,16 @@ skillsGroup
   .action(asyncAction(async (inputPath: string | undefined, options) => {
     trackEvent("skills.submit", { path: inputPath });
     await skillsSubmitCommand(inputPath, options);
+  }));
+
+skillsGroup
+  .command("update <slug> [path]")
+  .description("Update an existing skill with local files")
+  .option("-n, --name <name>", "Override skill name from frontmatter")
+  .option("-t, --tags <tags>", "Comma-separated tags")
+  .action(asyncAction(async (slug: string, inputPath: string | undefined, options) => {
+    trackEvent("skills.update", { slug, path: inputPath });
+    await skillsUpdateCommand(slug, inputPath, options);
   }));
 
 skillsGroup
