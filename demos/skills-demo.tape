@@ -25,13 +25,13 @@ Type "# Find a skill for web scraping"
 Sleep 300ms
 Enter
 Sleep 500ms
-Type "ortho skills search 'web scraping'"
+Type "orth skills search 'web scraping'"
 Sleep 400ms
 Enter
 Sleep 2.5s
 
 # Show skill details
-Type "ortho skills show orthogonal/olostep"
+Type "orth skills show orthogonal/olostep"
 Sleep 400ms
 Enter
 Sleep 2.5s
@@ -41,7 +41,7 @@ Type "# Add it to your agent"
 Sleep 300ms
 Enter
 Sleep 500ms
-Type "ortho skills add orthogonal/olostep"
+Type "orth skills add orthogonal/olostep"
 Sleep 400ms
 Enter
 Sleep 2s

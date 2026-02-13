@@ -25,13 +25,13 @@ Type "# Search 100+ APIs with natural language"
 Sleep 300ms
 Enter
 Sleep 500ms
-Type "ortho search 'find email addresses'"
+Type "orth search 'find email addresses'"
 Sleep 400ms
 Enter
 Sleep 3s
 
 # Show API details
-Type "ortho api show hunter"
+Type "orth api show hunter"
 Sleep 400ms
 Enter
 Sleep 2.5s
@@ -41,7 +41,7 @@ Type "# Call any API instantly"
 Sleep 300ms
 Enter
 Sleep 500ms
-Type "ortho run hunter /v2/domain-search -q domain=stripe.com"
+Type "orth run hunter /v2/domain-search -q domain=stripe.com"
 Sleep 400ms
 Enter
 Sleep 4s
@@ -51,7 +51,7 @@ Type "# Generate integration code"
 Sleep 300ms
 Enter
 Sleep 500ms
-Type "ortho code hunter /v2/domain-search --lang typescript"
+Type "orth code hunter /v2/domain-search --lang typescript"
 Sleep 400ms
 Enter
 Sleep 3s

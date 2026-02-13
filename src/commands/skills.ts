@@ -58,7 +58,7 @@ const AGENT_DIRS: Record<string, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills list
+// orth skills list
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsListCommand(options: { limit: string }) {
   const spinner = ora("Loading skills...").start();
@@ -107,10 +107,10 @@ export async function skillsListCommand(options: { limit: string }) {
     }
 
     console.log(
-      chalk.gray("Run 'ortho skills show <slug>' to see skill details"),
+      chalk.gray("Run 'orth skills show <slug>' to see skill details"),
     );
     console.log(
-      chalk.gray("Run 'ortho skills add <slug>' to add a skill locally"),
+      chalk.gray("Run 'orth skills add <slug>' to add a skill locally"),
     );
   } catch (error) {
     spinner.stop();
@@ -124,7 +124,7 @@ export async function skillsListCommand(options: { limit: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills search <query>
+// orth skills search <query>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsSearchCommand(
   query: string,
@@ -163,7 +163,7 @@ export async function skillsSearchCommand(
       console.log();
     }
 
-    console.log(chalk.gray("Run 'ortho skills show <slug>' for full details"));
+    console.log(chalk.gray("Run 'orth skills show <slug>' for full details"));
   } catch (error) {
     spinner.stop();
     console.error(
@@ -176,7 +176,7 @@ export async function skillsSearchCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills show <slug>
+// orth skills show <slug>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsShowCommand(slug: string) {
   const spinner = ora("Loading skill...").start();
@@ -245,7 +245,7 @@ export async function skillsShowCommand(slug: string) {
       console.log(chalk.white(`  ${skill.installCommand}`));
     }
     console.log(
-      chalk.gray(`\nRun 'ortho skills add ${skill.slug}' to add locally`),
+      chalk.gray(`\nRun 'orth skills add ${skill.slug}' to add locally`),
     );
   } catch (error) {
     spinner.stop();
@@ -259,7 +259,7 @@ export async function skillsShowCommand(slug: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills create <githubRepo>
+// orth skills create <githubRepo>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsCreateCommand(
   githubRepo: string,
@@ -321,7 +321,7 @@ export async function skillsCreateCommand(
     );
     console.log(
       chalk.white(
-        `To request verification: ${chalk.cyan(`ortho skills request-verification ${data.skill.slug}`)}`,
+        `To request verification: ${chalk.cyan(`orth skills request-verification ${data.skill.slug}`)}`,
       ),
     );
     console.log(
@@ -341,7 +341,7 @@ export async function skillsCreateCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills add <slug>
+// orth skills add <slug>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsInstallCommand(
   slug: string,
@@ -448,7 +448,7 @@ export async function skillsInstallCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills init [name]
+// orth skills init [name]
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Known binary/large file extensions to skip when reading local files
@@ -550,7 +550,7 @@ Describe the next step.
     console.log(chalk.bold("\nNext steps:"));
     console.log(chalk.white("  1. Edit SKILL.md with your skill's instructions"));
     console.log(chalk.white("  2. Add any supporting files to scripts/, references/, or assets/"));
-    console.log(chalk.white(`  3. Submit to Orthogonal: ${chalk.cyan(`ortho skills submit ${dirPath}`)}`));
+    console.log(chalk.white(`  3. Submit to Orthogonal: ${chalk.cyan(`orth skills submit ${dirPath}`)}`));
   } catch (error) {
     console.error(
       chalk.red(
@@ -562,7 +562,7 @@ Describe the next step.
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills submit [path]
+// orth skills submit [path]
 // ─────────────────────────────────────────────────────────────────────────────
 
 function readFilesRecursive(
@@ -658,7 +658,7 @@ export async function skillsSubmitCommand(
         chalk.red("Error: No SKILL.md found in the root of the directory"),
       );
       console.log(
-        chalk.gray("Run 'ortho skills init' to create a skill template"),
+        chalk.gray("Run 'orth skills init' to create a skill template"),
       );
       process.exit(1);
     }
@@ -741,7 +741,7 @@ export async function skillsSubmitCommand(
     );
     console.log(
       chalk.white(
-        `To request verification: ${chalk.cyan(`ortho skills request-verification ${data.skill.slug}`)}`,
+        `To request verification: ${chalk.cyan(`orth skills request-verification ${data.skill.slug}`)}`,
       ),
     );
     console.log(
@@ -766,7 +766,7 @@ export async function skillsSubmitCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills request-verification <slug>
+// orth skills request-verification <slug>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsRequestVerificationCommand(slug: string) {
   const spinner = ora("Submitting verification request...").start();
@@ -810,7 +810,7 @@ export async function skillsRequestVerificationCommand(slug: string) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills publish <slug> (deprecated - redirects to request-verification)
+// orth skills publish <slug> (deprecated - redirects to request-verification)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsPublishCommand(
   slug: string,
@@ -823,7 +823,7 @@ export async function skillsPublishCommand(
   );
   console.log(
     chalk.white(
-      `\nTo request your skill to be verified, run:\n  ${chalk.cyan(`ortho skills request-verification ${slug}`)}`,
+      `\nTo request your skill to be verified, run:\n  ${chalk.cyan(`orth skills request-verification ${slug}`)}`,
     ),
   );
   console.log(
@@ -839,7 +839,7 @@ export async function skillsPublishCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// ortho skills request <input>
+// orth skills request <input>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsRequestCommand(input: string) {
   const spinner = ora("Submitting skill request...").start();
