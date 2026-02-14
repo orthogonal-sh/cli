@@ -448,6 +448,198 @@ export async function skillsInstallCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// orth skills new [name] - Interactive skill creation
+// ─────────────────────────────────────────────────────────────────────────────
+export async function skillsNewCommand(
+  name: string | undefined,
+  options: {
+    description?: string;
+    scripts?: boolean;
+    references?: boolean;
+    assets?: boolean;
+    path?: string;
+  },
+) {
+  try {
+    const skillName = name || "my-skill";
+    
+    // Normalize skill name
+    const slugName = skillName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    if (slugName.length > 64) {
+      console.error(chalk.red("Error: Skill name must be under 64 characters"));
+      process.exit(1);
+    }
+
+    const dirPath = options.path || path.join(process.cwd(), slugName);
+
+    // Check if directory already exists
+    if (fs.existsSync(dirPath)) {
+      const contents = fs.readdirSync(dirPath);
+      if (contents.includes("SKILL.md")) {
+        console.error(chalk.red(`Error: ${dirPath} already contains a SKILL.md file`));
+        process.exit(1);
+      }
+    }
+
+    // Create directory
+    fs.mkdirSync(dirPath, { recursive: true });
+
+    // Generate title from name
+    const titleName = skillName
+      .split("-")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
+    // Build SKILL.md with proper structure
+    const description = options.description || 
+      `TODO: Describe what this skill does and when to use it. Include specific triggers.`;
+
+    const skillMdContent = `---
+name: ${slugName}
+description: ${description}
+---
+
+# ${titleName}
+
+## Overview
+
+TODO: Brief description of what this skill does.
+
+## Quick Start
+
+\`\`\`bash
+# TODO: Add example usage
+\`\`\`
+
+## Workflow
+
+### Step 1: Validate Input
+
+TODO: Describe input validation.
+
+### Step 2: Execute
+
+TODO: Describe the main operation.
+
+### Step 3: Verify Output
+
+TODO: Describe output verification.
+
+## Error Handling
+
+| Error | Cause | Resolution |
+|-------|-------|------------|
+| TODO | TODO | TODO |
+
+${options.references ? `## References
+
+- **Detailed guide**: See [references/guide.md](references/guide.md)
+` : ""}`;
+
+    fs.writeFileSync(path.join(dirPath, "SKILL.md"), skillMdContent, "utf-8");
+
+    // Create optional directories based on flags
+    const createdDirs: string[] = [];
+
+    if (options.scripts) {
+      const scriptsDir = path.join(dirPath, "scripts");
+      fs.mkdirSync(scriptsDir, { recursive: true });
+      
+      // Create example script
+      const exampleScript = `#!/bin/bash
+# Example script for ${titleName}
+# Usage: ./example.sh <input>
+
+set -e
+
+INPUT="\$1"
+
+if [[ -z "$INPUT" ]]; then
+  echo "Usage: $0 <input>"
+  exit 1
+fi
+
+echo "Processing: $INPUT"
+# TODO: Add implementation
+`;
+      fs.writeFileSync(path.join(scriptsDir, "example.sh"), exampleScript, "utf-8");
+      fs.chmodSync(path.join(scriptsDir, "example.sh"), 0o755);
+      createdDirs.push("scripts/");
+    }
+
+    if (options.references) {
+      const refsDir = path.join(dirPath, "references");
+      fs.mkdirSync(refsDir, { recursive: true });
+      
+      // Create example reference
+      const exampleRef = `# ${titleName} Guide
+
+## Contents
+
+- [Overview](#overview)
+- [Configuration](#configuration)
+- [Examples](#examples)
+
+## Overview
+
+TODO: Detailed documentation loaded on-demand.
+
+## Configuration
+
+TODO: Configuration options.
+
+## Examples
+
+TODO: More detailed examples.
+`;
+      fs.writeFileSync(path.join(refsDir, "guide.md"), exampleRef, "utf-8");
+      createdDirs.push("references/");
+    }
+
+    if (options.assets) {
+      const assetsDir = path.join(dirPath, "assets");
+      fs.mkdirSync(assetsDir, { recursive: true });
+      fs.writeFileSync(path.join(assetsDir, ".gitkeep"), "", "utf-8");
+      createdDirs.push("assets/");
+    }
+
+    // Output success
+    console.log(chalk.green(`\n✓ Created skill: ${dirPath}\n`));
+    
+    console.log(chalk.bold("Structure:"));
+    console.log(chalk.white("  SKILL.md") + chalk.gray(" ← Edit this"));
+    for (const dir of createdDirs) {
+      console.log(chalk.gray(`  ${dir}`));
+    }
+
+    console.log(chalk.bold("\nNext steps:"));
+    console.log(chalk.white("  1.") + chalk.gray(" Edit SKILL.md with your instructions"));
+    if (options.scripts) {
+      console.log(chalk.white("  2.") + chalk.gray(" Add scripts to scripts/"));
+    }
+    if (options.references) {
+      console.log(chalk.white("  3.") + chalk.gray(" Add detailed docs to references/"));
+    }
+    console.log(chalk.white(`  ${createdDirs.length + 2}.`) + chalk.cyan(` orth skills submit ${dirPath}`));
+
+    console.log(chalk.bold("\nTips:"));
+    console.log(chalk.gray("  • Keep SKILL.md under 500 lines"));
+    console.log(chalk.gray("  • Description is the trigger - be specific"));
+    console.log(chalk.gray("  • Use references/ for detailed docs"));
+  } catch (error) {
+    console.error(
+      chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`),
+    );
+    process.exit(1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // orth skills init [name]
 // ─────────────────────────────────────────────────────────────────────────────
 

@@ -16,6 +16,7 @@ import {
   skillsPublishCommand,
   skillsRequestCommand,
   skillsInitCommand,
+  skillsNewCommand,
   skillsSubmitCommand,
   skillsUpdateCommand,
   skillsRequestVerificationCommand,
@@ -200,6 +201,19 @@ skillsGroup
   .action(asyncAction(async (name: string | undefined, options) => {
     trackEvent("skills.init", { name });
     await skillsInitCommand(name, options);
+  }));
+
+skillsGroup
+  .command("new [name]")
+  .description("Create a new skill with guided structure")
+  .option("-d, --description <text>", "Skill description")
+  .option("-s, --scripts", "Include scripts/ directory with example")
+  .option("-r, --references", "Include references/ directory with example")
+  .option("-a, --assets", "Include assets/ directory")
+  .option("--path <dir>", "Output directory")
+  .action(asyncAction(async (name: string | undefined, options) => {
+    trackEvent("skills.new", { name });
+    await skillsNewCommand(name, options);
   }));
 
 skillsGroup
