@@ -18,6 +18,7 @@ import {
   skillsInitCommand,
   skillsSubmitCommand,
   skillsUpdateCommand,
+  skillsPushCommand,
   skillsRequestVerificationCommand,
 } from "./commands/skills.js";
 import { apiRequestCommand } from "./commands/apiRequest.js";
@@ -214,12 +215,21 @@ skillsGroup
 
 skillsGroup
   .command("update <slug> [path]")
-  .description("Update an existing skill with local files")
-  .option("-n, --name <name>", "Override skill name from frontmatter")
-  .option("-t, --tags <tags>", "Comma-separated tags")
+  .description("Pull latest skill version from Orthogonal to local directory")
+  .option("-f, --force", "Overwrite existing files")
   .action(asyncAction(async (slug: string, inputPath: string | undefined, options) => {
     trackEvent("skills.update", { slug, path: inputPath });
     await skillsUpdateCommand(slug, inputPath, options);
+  }));
+
+skillsGroup
+  .command("push <slug> [path]")
+  .description("Push local skill files to Orthogonal (update remote)")
+  .option("-n, --name <name>", "Override skill name from frontmatter")
+  .option("-t, --tags <tags>", "Comma-separated tags")
+  .action(asyncAction(async (slug: string, inputPath: string | undefined, options) => {
+    trackEvent("skills.push", { slug, path: inputPath });
+    await skillsPushCommand(slug, inputPath, options);
   }));
 
 skillsGroup

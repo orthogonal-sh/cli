@@ -17,12 +17,19 @@ export async function runCommand(
 
   try {
     // Parse query params
+    // Supports both `-q key=value -q key2=value2` and `-q 'key=value&key2=value2'`
     const query: Record<string, string> = {};
     if (options.query) {
       for (const param of options.query) {
-        const [key, value] = param.split("=");
-        if (key && value !== undefined) {
-          query[key] = value;
+        // Split on & to handle URL-style query strings
+        const parts = param.split("&");
+        for (const part of parts) {
+          const eqIndex = part.indexOf("=");
+          if (eqIndex > 0) {
+            const key = part.slice(0, eqIndex);
+            const value = part.slice(eqIndex + 1);
+            query[key] = decodeURIComponent(value);
+          }
         }
       }
     }

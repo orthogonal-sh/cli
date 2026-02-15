@@ -766,9 +766,10 @@ export async function skillsSubmitCommand(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// orth skills update <slug> [path]
+// orth skills push <slug> [path]
+// Push local skill files to remote (replaces remote with local)
 // ─────────────────────────────────────────────────────────────────────────────
-export async function skillsUpdateCommand(
+export async function skillsPushCommand(
   slug: string,
   inputPath: string | undefined,
   options: { name?: string; tags?: string },
@@ -823,7 +824,7 @@ export async function skillsUpdateCommand(
       process.exit(1);
     }
 
-    spinner.text = "Updating skill...";
+    spinner.text = "Pushing skill to Orthogonal...";
 
     const tags = options.tags
       ? options.tags.split(",").map((t) => t.trim())
@@ -851,13 +852,109 @@ export async function skillsUpdateCommand(
 
     spinner.stop();
 
-    console.log(chalk.green(`\n✓ Skill updated successfully`));
+    console.log(chalk.green(`\n✓ Skill pushed successfully`));
     console.log(chalk.bold(`\n${data.skill.name}`));
     console.log(chalk.gray(`  Slug: ${data.skill.slug}`));
     console.log(chalk.gray(`  Files: ${files.length}`));
     if (data.skill.description) {
       console.log(chalk.gray(`  ${data.skill.description.slice(0, 100)}`));
     }
+  } catch (error) {
+    spinner.stop();
+    console.error(
+      chalk.red(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      ),
+    );
+    process.exit(1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// orth skills update <slug> [path]
+// Pull latest version from Orthogonal and update local files
+// ─────────────────────────────────────────────────────────────────────────────
+export async function skillsUpdateCommand(
+  slug: string,
+  inputPath: string | undefined,
+  options: { force?: boolean },
+) {
+  const spinner = ora(`Fetching skill '${slug}' from Orthogonal...`).start();
+
+  try {
+    // Fetch skill from API
+    const data = await apiRequest<SkillDetailResponse>(`/skills/${slug}`);
+    const skill = data.skill;
+
+    if (!skill.files || skill.files.length === 0) {
+      spinner.stop();
+      console.error(chalk.red("Error: Skill has no files to download"));
+      process.exit(1);
+    }
+
+    // Determine target directory
+    const skillDirName = slug.replace(/\//g, "-");
+    const dirPath = inputPath
+      ? path.resolve(inputPath)
+      : path.join(process.cwd(), skillDirName);
+
+    // Check if directory exists and has content
+    if (fs.existsSync(dirPath) && !options.force) {
+      const contents = fs.readdirSync(dirPath);
+      if (contents.length > 0) {
+        spinner.stop();
+        console.log(
+          chalk.yellow(
+            `Directory ${dirPath} already exists with content.`,
+          ),
+        );
+        console.log(
+          chalk.white(
+            `Use ${chalk.cyan("--force")} to overwrite existing files.`,
+          ),
+        );
+        process.exit(1);
+      }
+    }
+
+    spinner.text = "Writing files...";
+
+    // Create directory
+    fs.mkdirSync(dirPath, { recursive: true });
+
+    // Write all files
+    for (const file of skill.files) {
+      // Sanitize file path to prevent path traversal
+      const sanitized = file.filePath.replace(/\.\.\//g, "").replace(/\.\.\\/g, "");
+      const filePath = path.resolve(dirPath, sanitized);
+      // Ensure resolved path is within dirPath
+      if (!filePath.startsWith(path.resolve(dirPath))) {
+        console.log(chalk.yellow(`  Skipped unsafe file path: ${file.filePath}`));
+        continue;
+      }
+      const fileDir = path.dirname(filePath);
+      fs.mkdirSync(fileDir, { recursive: true });
+      fs.writeFileSync(filePath, file.content, "utf-8");
+    }
+
+    spinner.stop();
+
+    console.log(chalk.green(`\n✓ Skill updated from Orthogonal`));
+    console.log(chalk.bold(`\n${skill.name}`));
+    console.log(chalk.gray(`  Path: ${dirPath}`));
+    console.log(chalk.gray(`  Files: ${skill.files.length}`));
+
+    console.log(chalk.bold("\nFiles written:"));
+    for (const file of skill.files) {
+      const primary = file.isPrimary ? chalk.green(" (primary)") : "";
+      console.log(chalk.gray("  ") + chalk.white(file.filePath) + primary);
+    }
+
+    console.log(
+      chalk.gray(
+        `\nTo push changes back: ${chalk.cyan(`orth skills push ${slug} ${dirPath}`)}`,
+      ),
+    );
   } catch (error) {
     spinner.stop();
     console.error(
