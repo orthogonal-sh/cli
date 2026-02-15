@@ -53,13 +53,17 @@ orth api show hunter /v2/domain-search
 
 ```bash
 # GET request with query params
-orth api run hunter /v2/domain-search -q domain=stripe.com
+orth run hunter /v2/domain-search -q domain=stripe.com
+
+# Multiple query params (two ways)
+orth run searchapi /api/v1/search -q 'engine=amazon_search&q=wireless earbuds'
+orth run searchapi /api/v1/search -q engine=amazon_search -q q=wireless earbuds
 
 # POST request with body
-orth api run olostep /v1/scrapes --body '{"url": "https://stripe.com"}'
+orth run olostep /v1/scrapes -d '{"url": "https://stripe.com"}'
 
 # Raw output for piping
-orth api run hunter /v2/domain-search -q domain=stripe.com --raw | jq '.emails'
+orth run hunter /v2/domain-search -q domain=stripe.com --raw | jq '.emails'
 ```
 
 ### Generate Code
@@ -133,6 +137,14 @@ orth skills create owner/repo --path skills/my-skill --ref main
 # Submit a local skill to the platform
 orth skills submit ./my-skill
 orth skills submit --name "My Skill" --tags "react,testing"
+
+# Update local skill from platform (pull)
+orth skills update owner/my-skill
+orth skills update owner/my-skill ./local-dir --force
+
+# Push local changes to platform
+orth skills push owner/my-skill
+orth skills push owner/my-skill ./local-dir
 
 # Request verification (required before discoverability)
 orth skills request-verification owner/my-skill
