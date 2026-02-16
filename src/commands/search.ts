@@ -21,13 +21,10 @@ export async function searchCommand(query: string, options: { limit: string }) {
       
       for (const endpoint of api.endpoints.slice(0, 3)) {
         const method = endpoint.method.padEnd(6);
-        const price = endpoint.price ? chalk.green(`$${endpoint.price.toFixed(2)}`) : chalk.gray("free");
         console.log(
           chalk.gray("  ") +
           chalk.yellow(method) +
-          chalk.white(endpoint.path) +
-          chalk.gray(" - ") +
-          price
+          chalk.white(endpoint.path)
         );
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
