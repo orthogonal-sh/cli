@@ -38,5 +38,6 @@ export async function whoamiCommand() {
 
   console.log(chalk.green("✓ Authenticated"));
   console.log(chalk.gray(`  Key: ${key.slice(0, 15)}...${key.slice(-4)}`));
-  console.log(chalk.gray(`  Source: ${process.env.ORTHOGONAL_API_KEY ? "environment" : "config file"}`));
+  const source = process.env.ORTHOGONAL_API_KEY ? "environment" : (require("../config.js").config.get("apiKey") ? "config file" : "~/.config/orthogonal/credentials.json");
+  console.log(chalk.gray(`  Source: ${source}`));
 }
