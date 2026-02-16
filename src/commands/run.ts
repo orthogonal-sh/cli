@@ -76,11 +76,6 @@ export async function runCommand(
     if (options.raw) {
       console.log(JSON.stringify(result.data, null, 2));
     } else {
-      // Show cost
-      if (result.price) {
-        console.log(chalk.gray(`Cost: $${result.price}`));
-      }
-
       // Pretty print the response
       console.log(chalk.bold("\nResponse:\n"));
       console.log(JSON.stringify(result.data, null, 2));
