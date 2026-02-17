@@ -58,12 +58,6 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       const desc = data.description || (data as any).endpoint?.description;
       console.log(chalk.gray(desc || "No description"));
       
-      // Get price
-      const price = data.price || (data as any).endpoint?.price;
-      if (price) {
-        console.log(chalk.green(`\nPrice: ${typeof price === 'number' ? '$' + price : price}`));
-      }
-
       // Get params from nested endpoint object if needed
       const queryParams = data.parameters?.query || (data as any).endpoint?.queryParams || [];
       const bodyParams = data.parameters?.body || (data as any).endpoint?.bodyParams || [];
@@ -156,8 +150,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
     
     for (const endpoint of api.endpoints) {
       const method = chalk.yellow(endpoint.method.padEnd(6));
-      const price = endpoint.price ? chalk.green(`$${endpoint.price.toFixed(2)}`) : chalk.gray("free");
-      console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
+      console.log(`${method} ${chalk.white(endpoint.path)}`);
       if (endpoint.description) {
         console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
       }
