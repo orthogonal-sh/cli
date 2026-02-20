@@ -381,6 +381,38 @@ export async function skillsInstallCommand(
     const skillDirName = skill.slug.replace(/\//g, "-");
     let installed = 0;
 
+    // Helper to write skill files to a directory with path traversal protection
+    const writeSkillFiles = (skillDir: string): boolean => {
+      fs.mkdirSync(skillDir, { recursive: true });
+      for (const file of skill.files!) {
+        const sanitized = file.filePath.replace(/\.\.\//g, "").replace(/\.\.\\/g, "");
+        const filePath = path.resolve(skillDir, sanitized);
+        if (!filePath.startsWith(path.resolve(skillDir))) {
+          console.log(chalk.yellow(`  Skipped unsafe file path: ${file.filePath}`));
+          continue;
+        }
+        const fileDir = path.dirname(filePath);
+        fs.mkdirSync(fileDir, { recursive: true });
+        fs.writeFileSync(filePath, file.content, "utf-8");
+      }
+      return true;
+    };
+
+    // Install to project-local .agent/skills/ directory
+    if (!options.agent) {
+      const localSkillDir = path.join(process.cwd(), ".agent", "skills", skillDirName);
+      try {
+        writeSkillFiles(localSkillDir);
+        console.log(chalk.green(`  ✓ Installed to project: ${localSkillDir}`));
+        installed++;
+      } catch {
+        console.log(
+          chalk.gray(`  - Skipped project .agent/skills/ (not writable)`),
+        );
+      }
+    }
+
+    // Install to global agent directories
     for (const [agentName, baseDir] of Object.entries(agents)) {
       if (!baseDir) continue;
 
@@ -390,24 +422,7 @@ export async function skillsInstallCommand(
       const skillDir = path.join(baseDir, skillDirName);
 
       try {
-        // Create directories
-        fs.mkdirSync(skillDir, { recursive: true });
-
-        // Write all files (with path traversal protection)
-        for (const file of skill.files) {
-          // Sanitize file path to prevent path traversal
-          const sanitized = file.filePath.replace(/\.\.\//g, "").replace(/\.\.\\/g, "");
-          const filePath = path.resolve(skillDir, sanitized);
-          // Ensure resolved path is within skillDir
-          if (!filePath.startsWith(path.resolve(skillDir))) {
-            console.log(chalk.yellow(`  Skipped unsafe file path: ${file.filePath}`));
-            continue;
-          }
-          const fileDir = path.dirname(filePath);
-          fs.mkdirSync(fileDir, { recursive: true });
-          fs.writeFileSync(filePath, file.content, "utf-8");
-        }
-
+        writeSkillFiles(skillDir);
         console.log(chalk.green(`  ✓ Installed for ${agentName}: ${skillDir}`));
         installed++;
       } catch {
