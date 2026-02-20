@@ -275,6 +275,61 @@ describe("skillsInstallCommand", () => {
     expect(mockApiRequest).toHaveBeenCalledWith("/skills/owner/test");
   });
 
+  it("should install to project-local .agent/skills/ directory", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "orth-install-test-"));
+    const originalCwd = process.cwd();
+
+    try {
+      process.chdir(tmpDir);
+
+      mockApiRequest
+        .mockResolvedValueOnce({
+          skill: {
+            name: "Test",
+            slug: "owner/test",
+            files: [{ filePath: "SKILL.md", content: "# Test Skill", isPrimary: true }],
+          },
+        })
+        .mockResolvedValueOnce({}); // install tracking
+
+      await skillsInstallCommand("owner/test", {});
+
+      const skillDir = path.join(tmpDir, ".agent", "skills", "owner-test");
+      expect(fs.existsSync(path.join(skillDir, "SKILL.md"))).toBe(true);
+      expect(fs.readFileSync(path.join(skillDir, "SKILL.md"), "utf-8")).toBe("# Test Skill");
+    } finally {
+      process.chdir(originalCwd);
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
+  it("should skip project-local install when --agent is specified", async () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "orth-install-test-"));
+    const originalCwd = process.cwd();
+
+    try {
+      process.chdir(tmpDir);
+
+      mockApiRequest
+        .mockResolvedValueOnce({
+          skill: {
+            name: "Test",
+            slug: "owner/test",
+            files: [{ filePath: "SKILL.md", content: "# Test Skill", isPrimary: true }],
+          },
+        })
+        .mockResolvedValueOnce({}); // install tracking
+
+      await skillsInstallCommand("owner/test", { agent: "cursor" });
+
+      const localSkillDir = path.join(tmpDir, ".agent", "skills", "owner-test");
+      expect(fs.existsSync(localSkillDir)).toBe(false);
+    } finally {
+      process.chdir(originalCwd);
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+
   it("should handle skill not found", async () => {
     mockApiRequest.mockRejectedValue(new Error("Not found"));
 
