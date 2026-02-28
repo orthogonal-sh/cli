@@ -79,12 +79,17 @@ export async function usageCommand(options: { limit: string; days?: string }) {
       });
       const statusIcon = item.status === "completed" ? "" : chalk.yellow(" ⚠");
 
+      const api = item.api ?? "unknown";
+      const method = item.method ?? "";
+      const path = item.path ?? "";
+      const cost = item.cost ?? "$0.00";
+
       console.log(
         "  " +
           chalk.gray(date.padEnd(18)) +
-          chalk.cyan(item.api.padEnd(20)) +
-          chalk.white((item.method + " " + item.path).substring(0, 30).padEnd(32)) +
-          chalk.green(item.cost.padStart(10)) +
+          chalk.cyan(api.padEnd(20)) +
+          chalk.white((method + " " + path).substring(0, 30).padEnd(32)) +
+          chalk.green(cost.padStart(10)) +
           statusIcon,
       );
     }
