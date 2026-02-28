@@ -11,19 +11,14 @@ interface UsageEvent {
   path: string;
   method: string;
   timestamp: string;
-  costCents: number;
-  platformFeeCents: number;
+  cost: string;
   status: string;
 }
 
 interface UsageResponse {
   usage: UsageEvent[];
+  totalSpent: string;
   pagination: { limit: number; offset: number; count: number; total: number };
-  summary: {
-    totalSpentCents: number;
-    totalApiPaymentCents: number;
-    totalPlatformFeeCents: number;
-  };
 }
 
 export async function balanceCommand() {
@@ -82,7 +77,6 @@ export async function usageCommand(options: { limit: string; days?: string }) {
         hour: "2-digit",
         minute: "2-digit",
       });
-      const cost = item.costCents / 100000;
       const statusIcon = item.status === "completed" ? "" : chalk.yellow(" ⚠");
 
       console.log(
@@ -90,17 +84,16 @@ export async function usageCommand(options: { limit: string; days?: string }) {
           chalk.gray(date.padEnd(18)) +
           chalk.cyan(item.api.padEnd(20)) +
           chalk.white((item.method + " " + item.path).substring(0, 30).padEnd(32)) +
-          chalk.green(`$${cost.toFixed(4)}`.padStart(10)) +
+          chalk.green(item.cost.padStart(10)) +
           statusIcon,
       );
     }
 
     // Summary
-    if (data.summary) {
-      const totalSpent = data.summary.totalSpentCents / 100000;
+    if (data.totalSpent) {
       console.log(chalk.gray("\n  " + "─".repeat(80)));
       console.log(
-        chalk.bold(`  Total: ${chalk.green(`$${totalSpent.toFixed(2)}`)}`) +
+        chalk.bold(`  Total: ${chalk.green(data.totalSpent)}`) +
           chalk.gray(` (${data.pagination.total} calls)`),
       );
     }

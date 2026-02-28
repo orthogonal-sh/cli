@@ -89,17 +89,12 @@ describe("usageCommand", () => {
           path: "/forecast",
           method: "GET",
           timestamp: "2026-02-27T10:00:00Z",
-          costCents: 100,
-          platformFeeCents: 4,
+          cost: "$0.0010",
           status: "completed",
         },
       ],
+      totalSpent: "$0.00",
       pagination: { limit: 20, offset: 0, count: 1, total: 1 },
-      summary: {
-        totalSpentCents: 100,
-        totalApiPaymentCents: 96,
-        totalPlatformFeeCents: 4,
-      },
     });
 
     await usageCommand({ limit: "20" });
