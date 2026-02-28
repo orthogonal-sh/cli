@@ -89,7 +89,7 @@ describe("usageCommand", () => {
           path: "/forecast",
           method: "GET",
           timestamp: "2026-02-27T10:00:00Z",
-          cost: "$0.0010",
+          cost: "$0.001",
           status: "completed",
         },
       ],
