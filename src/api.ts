@@ -151,6 +151,33 @@ export async function search(
   });
 }
 
+export interface ApiBySlugResponse {
+  success: boolean;
+  api: {
+    name: string;
+    slug: string;
+    description?: string;
+    baseUrl: string;
+    verified: boolean;
+  };
+  endpoints: Array<{
+    id: string;
+    path: string;
+    method: string;
+    description?: string;
+    price?: number;
+    isPayable?: boolean;
+    docsUrl?: string;
+    queryParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
+    bodyParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
+  }>;
+  count: number;
+}
+
+export async function getApiBySlug(slug: string): Promise<ApiBySlugResponse> {
+  return apiRequest<ApiBySlugResponse>(`/api-directory/${encodeURIComponent(slug)}`);
+}
+
 export async function getDetails(
   api: string,
   path: string,

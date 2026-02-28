@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import ora from "ora";
-import { search, getDetails, SearchResponse, DetailsResponse } from "../api.js";
+import { search, getDetails, getApiBySlug, SearchResponse, DetailsResponse } from "../api.js";
 
 interface ApiOptions {
   x402?: boolean;
@@ -134,30 +134,56 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       return;
     }
 
-    // Show API endpoints
-    const data: SearchResponse = await search(slug, 20);
-    spinner.stop();
+    // Show API endpoints - direct lookup by slug
+    try {
+      const apiData = await getApiBySlug(slug);
+      spinner.stop();
 
-    const api = data.results.find((a) => a.slug === slug);
-    
-    if (!api) {
-      console.log(chalk.yellow(`API '${slug}' not found.`));
-      console.log(chalk.gray("Run 'orth api' to see available APIs"));
-      return;
-    }
+      const api = apiData.api;
+      console.log(chalk.bold(`\n${chalk.cyan(api.name)} (${api.slug})\n`));
 
-    console.log(chalk.bold(`\n${chalk.cyan(api.name)} (${api.slug})\n`));
-    
-    for (const endpoint of api.endpoints) {
-      const method = chalk.yellow(endpoint.method.padEnd(6));
-      console.log(`${method} ${chalk.white(endpoint.path)}`);
-      if (endpoint.description) {
-        console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
+      for (const endpoint of apiData.endpoints) {
+        const method = chalk.yellow(endpoint.method.padEnd(6));
+        const price = endpoint.price === 0 || endpoint.price === null || endpoint.price === undefined
+          ? chalk.green("free")
+          : "";
+        console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
+        if (endpoint.description) {
+          console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
+        }
       }
-    }
 
-    console.log(chalk.gray("\nRun 'orth api show " + slug + " <path>' for endpoint details"));
-    console.log(chalk.gray("Run 'orth run " + slug + " <path>' to call an endpoint"));
+      console.log(chalk.gray("\nRun 'orth api show " + slug + " <path>' for endpoint details"));
+      console.log(chalk.gray("Run 'orth run " + slug + " <path>' to call an endpoint"));
+    } catch {
+      // Fallback to search if direct lookup fails (e.g. older backend)
+      const data: SearchResponse = await search(slug, 20);
+      spinner.stop();
+
+      const api = data.results.find((a) => a.slug === slug);
+
+      if (!api) {
+        console.log(chalk.yellow(`API '${slug}' not found.`));
+        console.log(chalk.gray("Run 'orth api' to see available APIs"));
+        return;
+      }
+
+      console.log(chalk.bold(`\n${chalk.cyan(api.name)} (${api.slug})\n`));
+
+      for (const endpoint of api.endpoints) {
+        const method = chalk.yellow(endpoint.method.padEnd(6));
+        const price = endpoint.price === 0 || endpoint.price === null || endpoint.price === undefined
+          ? chalk.green("free")
+          : "";
+        console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
+        if (endpoint.description) {
+          console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
+        }
+      }
+
+      console.log(chalk.gray("\nRun 'orth api show " + slug + " <path>' for endpoint details"));
+      console.log(chalk.gray("Run 'orth run " + slug + " <path>' to call an endpoint"));
+    }
 
   } catch (error) {
     spinner.stop();
