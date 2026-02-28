@@ -172,7 +172,10 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
 
       for (const endpoint of api.endpoints) {
         const method = chalk.yellow(endpoint.method.padEnd(6));
-        console.log(`${method} ${chalk.white(endpoint.path)}`);
+        const price = endpoint.price === 0 || endpoint.price === null || endpoint.price === undefined
+          ? chalk.green("free")
+          : "";
+        console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
         }
