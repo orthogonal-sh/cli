@@ -3,9 +3,7 @@ import ora from "ora";
 import { apiRequest } from "../api.js";
 
 interface BalanceResponse {
-  balanceCents: number;
-  balanceCredits: number;
-  balanceDollars: string;
+  balance: string;
 }
 
 interface UsageEvent {
@@ -35,17 +33,7 @@ export async function balanceCommand() {
     const data = await apiRequest<BalanceResponse>("/credits/balance");
     spinner.stop();
 
-    console.log(chalk.bold("\n  Account Balance"));
-    console.log(chalk.gray("  ─────────────────"));
-
-    const dollars = data.balanceDollars || `$${(data.balanceCents / 100000).toFixed(2)}`;
-    console.log(`  ${chalk.green.bold(dollars)}`);
-
-    if (data.balanceCredits !== undefined) {
-      console.log(chalk.gray(`  ${data.balanceCredits.toLocaleString()} credits`));
-    }
-
-    console.log();
+    console.log(`\n  ${chalk.green.bold(data.balance)}\n`);
   } catch (error) {
     spinner.stop();
     const message = error instanceof Error ? error.message : String(error);

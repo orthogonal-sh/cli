@@ -43,9 +43,7 @@ describe("balanceCommand", () => {
 
   it("calls /credits/balance endpoint", async () => {
     (apiRequest as ReturnType<typeof vi.fn>).mockResolvedValue({
-      balanceCents: 500000,
-      balanceCredits: 5000,
-      balanceDollars: "$5.00",
+      balance: "$5.00",
     });
 
     await balanceCommand();
@@ -56,9 +54,7 @@ describe("balanceCommand", () => {
 
   it("handles zero balance", async () => {
     (apiRequest as ReturnType<typeof vi.fn>).mockResolvedValue({
-      balanceCents: 0,
-      balanceCredits: 0,
-      balanceDollars: "$0.00",
+      balance: "$0.00",
     });
 
     await balanceCommand();
