@@ -87,7 +87,8 @@ program
 program
   .command("usage")
   .description("Show recent API usage")
-  .option("-l, --limit <number>", "Number of recent calls", "10")
+  .option("-l, --limit <number>", "Number of recent calls", "20")
+  .option("-d, --days <number>", "Number of days to look back", "30")
   .action(asyncAction(async (options) => {
     trackEvent("usage");
     await usageCommand(options);
