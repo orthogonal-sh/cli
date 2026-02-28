@@ -772,7 +772,7 @@ export async function skillsSubmitCommand(
 export async function skillsPushCommand(
   slug: string,
   inputPath: string | undefined,
-  options: { name?: string; tags?: string },
+  options: { name?: string; tags?: string; bump?: string },
 ) {
   const dirPath = inputPath ? path.resolve(inputPath) : process.cwd();
   const spinner = ora("Reading skill files...").start();
@@ -836,6 +836,7 @@ export async function skillsPushCommand(
         content: f.content,
         isPrimary: f.isPrimary,
       })),
+      bump: options.bump || "patch",
     };
 
     if (skillName) updatePayload.name = skillName;
@@ -1037,6 +1038,123 @@ export async function skillsPublishCommand(
       "\nOr manage from the dashboard: https://orthogonal.com/dashboard/skills",
     ),
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// orth skills request <input>
+// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// orth skills versions <slug>
+// ─────────────────────────────────────────────────────────────────────────────
+export async function skillsVersionsCommand(slug: string) {
+  const spinner = ora("Loading versions...").start();
+
+  try {
+    const data = await apiRequest<{
+      versions: {
+        id: string;
+        version: string;
+        versionNumber: number;
+        changelog?: string;
+        createdBy?: string;
+        createdAt: string;
+        isCurrent: boolean;
+      }[];
+    }>(`/skills/${slug}/versions`);
+    spinner.stop();
+
+    if (!data.versions || data.versions.length === 0) {
+      console.log(chalk.yellow("No versions found for this skill."));
+      return;
+    }
+
+    console.log(chalk.bold(`\nVersions for ${chalk.cyan(slug)}:\n`));
+
+    for (const v of data.versions) {
+      const current = v.isCurrent ? chalk.green(" ← current") : "";
+      const date = new Date(v.createdAt).toLocaleDateString();
+      console.log(
+        chalk.white.bold(`  v${v.version}`) +
+          current +
+          chalk.gray(` (${date})`),
+      );
+      if (v.changelog) {
+        console.log(chalk.gray(`    ${v.changelog}`));
+      }
+    }
+
+    console.log(
+      chalk.gray(`\nRollback: orth skills rollback ${slug} <version>`),
+    );
+  } catch (error) {
+    spinner.stop();
+    console.error(
+      chalk.red(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      ),
+    );
+    process.exit(1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// orth skills rollback <slug> <version>
+// ─────────────────────────────────────────────────────────────────────────────
+export async function skillsRollbackCommand(slug: string, version: string) {
+  const spinner = ora(`Rolling back ${slug} to v${version}...`).start();
+
+  try {
+    // First get versions to find the version ID
+    const versionsData = await apiRequest<{
+      versions: {
+        id: string;
+        version: string;
+        versionNumber: number;
+        isCurrent: boolean;
+      }[];
+    }>(`/skills/${slug}/versions`);
+
+    const targetVersion = versionsData.versions.find(
+      (v) => v.version === version,
+    );
+    if (!targetVersion) {
+      spinner.stop();
+      console.error(
+        chalk.red(`Error: Version ${version} not found for skill ${slug}`),
+      );
+      console.log(chalk.gray("Run 'orth skills versions " + slug + "' to see available versions"));
+      process.exit(1);
+    }
+
+    if (targetVersion.isCurrent) {
+      spinner.stop();
+      console.log(chalk.yellow(`v${version} is already the current version.`));
+      return;
+    }
+
+    // Get skill ID from the slug
+    const skillData = await apiRequest<{ skill: SkillResponse }>(
+      `/skills/${slug}`,
+    );
+
+    await apiRequest(
+      `/skills/${skillData.skill.id}/versions/${targetVersion.id}/rollback`,
+      { method: "POST" },
+    );
+
+    spinner.stop();
+    console.log(
+      chalk.green(`\n✓ Rolled back ${chalk.cyan(slug)} to v${version}`),
+    );
+  } catch (error) {
+    spinner.stop();
+    console.error(
+      chalk.red(
+        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
+      ),
+    );
+    process.exit(1);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

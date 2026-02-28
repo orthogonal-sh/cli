@@ -20,6 +20,8 @@ import {
   skillsUpdateCommand,
   skillsPushCommand,
   skillsRequestVerificationCommand,
+  skillsVersionsCommand,
+  skillsRollbackCommand,
 } from "./commands/skills.js";
 import { apiRequestCommand } from "./commands/apiRequest.js";
 import { trackEvent } from "./analytics.js";
@@ -228,9 +230,26 @@ skillsGroup
   .description("Push local skill files to Orthogonal (update remote)")
   .option("-n, --name <name>", "Override skill name from frontmatter")
   .option("-t, --tags <tags>", "Comma-separated tags")
+  .option("-b, --bump <type>", "Version bump type: major, minor, patch", "patch")
   .action(asyncAction(async (slug: string, inputPath: string | undefined, options) => {
     trackEvent("skills.push", { slug, path: inputPath });
     await skillsPushCommand(slug, inputPath, options);
+  }));
+
+skillsGroup
+  .command("versions <slug>")
+  .description("List version history for a skill")
+  .action(asyncAction(async (slug: string) => {
+    trackEvent("skills.versions", { slug });
+    await skillsVersionsCommand(slug);
+  }));
+
+skillsGroup
+  .command("rollback <slug> <version>")
+  .description("Rollback a skill to a specific version (e.g. 1.0.0)")
+  .action(asyncAction(async (slug: string, version: string) => {
+    trackEvent("skills.rollback", { slug, version });
+    await skillsRollbackCommand(slug, version);
   }));
 
 skillsGroup
