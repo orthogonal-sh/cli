@@ -153,7 +153,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         }
       }
 
-      console.log(chalk.gray("\nRun 'orth api " + slug + " <path>' for endpoint details"));
+      console.log(chalk.gray("\nRun 'orth api show " + slug + " <path>' for endpoint details"));
       console.log(chalk.gray("Run 'orth run " + slug + " <path>' to call an endpoint"));
     } catch {
       // Fallback to search if direct lookup fails (e.g. older backend)
