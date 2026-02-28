@@ -175,7 +175,7 @@ export interface ApiBySlugResponse {
 }
 
 export async function getApiBySlug(slug: string): Promise<ApiBySlugResponse> {
-  return apiRequest<ApiBySlugResponse>(`/apis/${encodeURIComponent(slug)}`);
+  return apiRequest<ApiBySlugResponse>(`/api-directory/${encodeURIComponent(slug)}`);
 }
 
 export async function getDetails(
