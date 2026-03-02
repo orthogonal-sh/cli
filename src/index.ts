@@ -109,21 +109,12 @@ apiGroup
 
 apiGroup
   .command("show <slug> [path]")
+  .alias("info")
   .description("Show API endpoints or endpoint details")
   .option("--x402", "Output x402 payment URL only")
   .option("--x402-full", "Output full x402 payment details")
   .action(asyncAction(async (slug: string, path: string | undefined, options) => {
     trackEvent("api.show", { slug, path });
-    await apiCommand(slug, path, options);
-  }));
-
-apiGroup
-  .command("info <slug> [path]")
-  .description("Show API info (alias for 'show')")
-  .option("--x402", "Output x402 payment URL only")
-  .option("--x402-full", "Output full x402 payment details")
-  .action(asyncAction(async (slug: string, path: string | undefined, options) => {
-    trackEvent("api.info", { slug, path });
     await apiCommand(slug, path, options);
   }));
 
