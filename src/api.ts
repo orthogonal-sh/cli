@@ -141,6 +141,30 @@ export interface IntegrateResponse {
   snippets: Record<string, string>;
 }
 
+export interface ListApisResponse {
+  success: boolean;
+  apis: Array<{
+    name: string;
+    slug: string;
+    description?: string;
+    baseUrl: string;
+    verified: boolean;
+    endpoints: Array<{
+      path: string;
+      method: string;
+      description?: string;
+      price?: number;
+      isPayable?: boolean;
+    }>;
+  }>;
+  count: number;
+  hasMore: boolean;
+}
+
+export async function listApis(limit = 100, offset = 0): Promise<ListApisResponse> {
+  return apiRequest<ListApisResponse>(`/list-endpoints?limit=${limit}&offset=${offset}`);
+}
+
 export async function search(
   prompt: string,
   limit = 10,
