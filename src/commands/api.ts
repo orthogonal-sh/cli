@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import ora from "ora";
-import { search, getDetails, getApiBySlug, SearchResponse, DetailsResponse } from "../api.js";
+import { search, getDetails, getApiBySlug, listApis, SearchResponse, DetailsResponse } from "../api.js";
 
 interface ApiOptions {
   x402?: boolean;
@@ -12,38 +12,49 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
 
   try {
     if (!slug) {
-      // List all APIs - search multiple terms to get broader coverage
-      const searches = await Promise.all([
-        search("api", 50),
-        search("data", 50),
-        search("search", 50),
-        search("email", 50),
-      ]);
-      spinner.stop();
-      
-      // Merge and dedupe results
-      const allResults = searches.flatMap(s => s.results || []);
-      const data: SearchResponse = {
-        results: allResults,
-        count: allResults.length,
-        apisCount: new Set(allResults.map(r => r.slug)).size,
-      };
-      
-      console.log(chalk.bold("\nAvailable APIs:\n"));
-      
-      const seen = new Set<string>();
-      for (const api of data.results) {
-        if (!api.slug || seen.has(api.slug)) continue;
-        seen.add(api.slug);
-        
-        console.log(
-          chalk.cyan.bold(api.slug.padEnd(20)) +
-          chalk.white(api.name || "") +
-          chalk.gray(` (${api.endpoints?.length || 0} endpoints)`)
-        );
+      // List all APIs using the list-endpoints endpoint
+      try {
+        const data = await listApis(500);
+        spinner.stop();
+
+        console.log(chalk.bold("\nAvailable APIs:\n"));
+
+        const apis = (data.apis || []).sort((a, b) => a.slug.localeCompare(b.slug));
+        for (const api of apis) {
+          console.log(
+            chalk.cyan.bold(api.slug.padEnd(20)) +
+            chalk.white(api.name || "") +
+            chalk.gray(` (${api.endpoints?.length || 0} endpoints)`)
+          );
+        }
+
+        console.log(chalk.gray("\nRun 'orth api show <slug>' to see endpoints for an API"));
+      } catch {
+        // Fallback to search-based listing if list-endpoints not available
+        const searches = await Promise.all([
+          search("api", 50),
+          search("data", 50),
+          search("search", 50),
+          search("email", 50),
+        ]);
+        spinner.stop();
+
+        const allResults = searches.flatMap(s => s.results || []);
+        console.log(chalk.bold("\nAvailable APIs:\n"));
+
+        const seen = new Set<string>();
+        for (const api of allResults) {
+          if (!api.slug || seen.has(api.slug)) continue;
+          seen.add(api.slug);
+          console.log(
+            chalk.cyan.bold(api.slug.padEnd(20)) +
+            chalk.white(api.name || "") +
+            chalk.gray(` (${api.endpoints?.length || 0} endpoints)`)
+          );
+        }
+
+        console.log(chalk.gray("\nRun 'orth api show <slug>' to see endpoints for an API"));
       }
-      
-      console.log(chalk.gray("\nRun 'orth api show <slug>' to see endpoints for an API"));
       return;
     }
 
