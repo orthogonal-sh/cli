@@ -125,6 +125,15 @@ export interface DetailsResponse {
       description?: string;
     }>;
   };
+  action?: {
+    description?: string;
+    parameters?: Array<{
+      name: string;
+      type: string;
+      required: boolean;
+      description?: string;
+    }>;
+  };
 }
 
 export interface RunResponse {

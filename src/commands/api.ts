@@ -65,13 +65,14 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       
       console.log(chalk.bold(`\n${chalk.cyan(slug)}${chalk.white(path)}\n`));
       
-      // Get description from endpoint object if available
-      const desc = data.description || (data as any).endpoint?.description;
+      // Get description from endpoint or action object if available
+      const desc = data.description || data.endpoint?.description || data.action?.description;
       console.log(chalk.gray(desc || "No description"));
-      
-      // Get params from nested endpoint object if needed
-      const queryParams = data.parameters?.query || (data as any).endpoint?.queryParams || [];
-      const bodyParams = data.parameters?.body || (data as any).endpoint?.bodyParams || [];
+
+      // Get params from nested endpoint or action object if needed
+      const actionParams = data.action?.parameters ?? [];
+      const queryParams = data.parameters?.query || data.endpoint?.queryParams || [];
+      const bodyParams = data.parameters?.body || data.endpoint?.bodyParams || actionParams;
 
       if (queryParams.length > 0) {
         console.log(chalk.bold("\nQuery Parameters:"));
