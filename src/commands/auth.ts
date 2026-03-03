@@ -25,6 +25,7 @@ function isValidVerificationUrl(url: string): boolean {
     return (
       parsed.protocol === "https:" &&
       (parsed.hostname === "orthogonal.sh" ||
+        parsed.hostname === "orth.sh" ||
         parsed.hostname.endsWith(".orth.sh"))
     );
   } catch {
@@ -112,6 +113,16 @@ async function deviceAuthFlow(): Promise<void> {
         setApiKey(status.api_key);
         console.log(chalk.green("✓ Logged in successfully!"));
         return;
+      }
+
+      if (status.status === "confirmed" && !status.api_key) {
+        // Key already claimed by a prior poll — login was confirmed but
+        // we missed the key delivery. User should re-run.
+        pollSpinner.fail("Login was confirmed but the key could not be retrieved");
+        console.log(
+          chalk.yellow("  Please run `orth login` to try again."),
+        );
+        process.exit(1);
       }
 
       if (status.status === "expired" || status.status === "not_found") {
