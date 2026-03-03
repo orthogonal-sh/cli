@@ -8,7 +8,6 @@ interface DeviceCodeResponse {
   device_id: string;
   user_code: string;
   verification_url: string;
-  expires_at: string;
 }
 
 interface DeviceStatusResponse {
@@ -18,6 +17,19 @@ interface DeviceStatusResponse {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isValidVerificationUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      parsed.protocol === "https:" &&
+      (parsed.hostname === "orthogonal.sh" ||
+        parsed.hostname.endsWith(".orth.sh"))
+    );
+  } catch {
+    return false;
+  }
 }
 
 async function deviceAuthFlow(): Promise<void> {
@@ -54,10 +66,19 @@ async function deviceAuthFlow(): Promise<void> {
   );
   console.log();
 
-  try {
-    await open(deviceCode.verification_url);
-    console.log(chalk.gray(`  Browser opened to: ${deviceCode.verification_url}`));
-  } catch {
+  // Validate the URL before opening to prevent open-redirect attacks
+  if (isValidVerificationUrl(deviceCode.verification_url)) {
+    try {
+      await open(deviceCode.verification_url);
+      console.log(chalk.gray(`  Browser opened to: ${deviceCode.verification_url}`));
+    } catch {
+      console.log(
+        chalk.yellow(
+          `  Open this URL in your browser: ${deviceCode.verification_url}`,
+        ),
+      );
+    }
+  } else {
     console.log(
       chalk.yellow(
         `  Open this URL in your browser: ${deviceCode.verification_url}`,
@@ -82,6 +103,11 @@ async function deviceAuthFlow(): Promise<void> {
       consecutiveErrors = 0;
 
       if (status.status === "confirmed" && status.api_key) {
+        // Validate key format before persisting
+        if (!status.api_key.startsWith("orth_")) {
+          pollSpinner.fail("Received an invalid API key from the server");
+          process.exit(1);
+        }
         pollSpinner.stop();
         setApiKey(status.api_key);
         console.log(chalk.green("✓ Logged in successfully!"));
@@ -93,7 +119,7 @@ async function deviceAuthFlow(): Promise<void> {
         console.log(
           chalk.yellow("  Please run `orth login` to try again."),
         );
-        return;
+        process.exit(1);
       }
     } catch {
       consecutiveErrors++;
@@ -102,13 +128,14 @@ async function deviceAuthFlow(): Promise<void> {
         console.log(
           chalk.yellow("  Check your internet connection and try again."),
         );
-        return;
+        process.exit(1);
       }
     }
   }
 
   pollSpinner.fail("Device code expired");
   console.log(chalk.yellow("  Please run `orth login` to try again."));
+  process.exit(1);
 }
 
 export async function loginCommand(options: { key?: string }) {
