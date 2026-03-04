@@ -99,7 +99,7 @@ async function deviceAuthFlow(): Promise<void> {
 
     try {
       const status = await unauthenticatedRequest<DeviceStatusResponse>(
-        `/api/auth/device/${deviceCode.device_id}/status`,
+        `/api/auth/device/${encodeURIComponent(deviceCode.device_id)}/status`,
       );
       consecutiveErrors = 0;
 

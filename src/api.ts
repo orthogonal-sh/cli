@@ -269,11 +269,15 @@ export async function unauthenticatedRequest<T = unknown>(
     headers["Content-Type"] = "application/json";
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
   const res = await fetch(`${INTERNAL_BASE_URL}${endpoint}`, {
     method: options.method || "GET",
     headers,
     body: options.body ? JSON.stringify(options.body) : undefined,
+    signal: controller.signal,
   });
+  clearTimeout(timeout);
 
   const data = await res.json();
 
