@@ -271,18 +271,27 @@ export async function unauthenticatedRequest<T = unknown>(
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10_000);
-  const res = await fetch(`${INTERNAL_BASE_URL}${endpoint}`, {
-    method: options.method || "GET",
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-    signal: controller.signal,
-  });
-  clearTimeout(timeout);
+  let res: Response;
+  try {
+    res = await fetch(`${INTERNAL_BASE_URL}${endpoint}`, {
+      method: options.method || "GET",
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
-  const data = await res.json();
+  let data: Record<string, unknown>;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Request failed with status ${res.status}`);
+  }
 
   if (!res.ok) {
-    throw new Error(data.error || data.message || `Request failed with status ${res.status}`);
+    throw new Error((data.error as string) || (data.message as string) || `Request failed with status ${res.status}`);
   }
 
   return data as T;
