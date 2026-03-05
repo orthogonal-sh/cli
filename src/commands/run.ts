@@ -1,6 +1,52 @@
 import chalk from "chalk";
 import ora from "ora";
+import { writeFileSync } from "fs";
+import { resolve } from "path";
 import { run, RunResponse } from "../api.js";
+
+// Map content-type to file extension
+const CONTENT_TYPE_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/gif": "gif",
+  "image/webp": "webp",
+  "image/svg+xml": "svg",
+  "application/pdf": "pdf",
+  "application/zip": "zip",
+  "application/octet-stream": "bin",
+  "audio/mpeg": "mp3",
+  "audio/wav": "wav",
+  "video/mp4": "mp4",
+};
+
+function extFromContentType(contentType: string): string {
+  // Try exact match first, then prefix match
+  if (CONTENT_TYPE_EXT[contentType]) return CONTENT_TYPE_EXT[contentType];
+  // Strip parameters (e.g., "image/jpeg; charset=utf-8")
+  const base = contentType.split(";")[0].trim();
+  if (CONTENT_TYPE_EXT[base]) return CONTENT_TYPE_EXT[base];
+  // Fallback: use subtype
+  const parts = base.split("/");
+  return parts[1] || "bin";
+}
+
+interface BinaryEnvelope {
+  _binary: true;
+  encoding: string;
+  contentType: string;
+  data: string;
+  size: number;
+}
+
+function isBinaryEnvelope(data: unknown): data is BinaryEnvelope {
+  return (
+    typeof data === "object" &&
+    data !== null &&
+    (data as any)._binary === true &&
+    typeof (data as any).data === "string" &&
+    typeof (data as any).encoding === "string"
+  );
+}
 
 export async function runCommand(
   api: string,
@@ -11,6 +57,7 @@ export async function runCommand(
     body?: string;
     data?: string;
     raw?: boolean;
+    output?: string;
   }
 ) {
   const spinner = ora(`Calling ${api}${path}...`).start();
@@ -72,6 +119,27 @@ export async function runCommand(
     });
 
     spinner.stop();
+
+    // Handle binary responses (base64-encoded by the server)
+    if (isBinaryEnvelope(result.data)) {
+      const ext = extFromContentType(result.data.contentType);
+      const outputPath = options.output
+        ? resolve(options.output)
+        : resolve(`${api.replace(/\//g, "-")}-output.${ext}`);
+
+      const buffer = Buffer.from(result.data.data, "base64");
+      writeFileSync(outputPath, buffer);
+      console.log(chalk.green(`\n${ext.toUpperCase()} saved to: ${outputPath} (${buffer.length} bytes)`));
+      return;
+    }
+
+    // If --output specified for non-binary data, save JSON to file
+    if (options.output) {
+      const outputPath = resolve(options.output);
+      writeFileSync(outputPath, JSON.stringify(result.data, null, 2));
+      console.log(chalk.green(`\nResponse saved to: ${outputPath}`));
+      return;
+    }
 
     if (options.raw) {
       console.log(JSON.stringify(result.data, null, 2));

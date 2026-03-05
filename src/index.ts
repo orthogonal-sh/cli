@@ -135,6 +135,7 @@ apiGroup
   .option("-b, --body <json>", "Request body JSON")
   .option("-d, --data <json>", "Alias for --body")
   .option("--raw", "Output raw JSON without formatting")
+  .option("-o, --output <file>", "Save response to file (auto-detects binary like images)")
   .action(asyncAction(async (slug: string, path: string, options) => {
     trackEvent("api.run", { slug, path });
     await runCommand(slug, path, options);
@@ -302,6 +303,7 @@ program
   .option("-b, --body <json>", "Request body JSON")
   .option("-d, --data <json>", "Alias for --body")
   .option("--raw", "Output raw JSON without formatting")
+  .option("-o, --output <file>", "Save response to file (auto-detects binary like images)")
   .action(asyncAction(async (api: string, path: string, options) => {
     trackEvent("run", { api, path });
     await runCommand(api, path, options);
