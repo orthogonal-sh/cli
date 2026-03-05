@@ -19,7 +19,7 @@ const CONTENT_TYPE_EXT: Record<string, string> = {
   "video/mp4": "mp4",
 };
 
-const VALID_ENCODINGS = new Set(["base64", "hex", "utf8", "utf-8", "ascii", "latin1", "binary"]);
+const VALID_ENCODINGS = new Set(["base64", "base64url", "hex", "utf8", "utf-8", "ascii", "latin1", "binary"]);
 
 function extFromContentType(contentType: string): string {
   // Try exact match first, then prefix match
@@ -128,10 +128,12 @@ export async function runCommand(
     if (isBinaryEnvelope(result.data)) {
       if (!options.output) {
         const ext = extFromContentType(result.data.contentType);
+        const methodHint = options.method !== "GET" ? ` -X ${options.method}` : "";
         const bodyHint = options.body || options.data ? " --body '...'" : "";
+        const queryHint = options.query?.length ? " -q '...'" : "";
         console.log(chalk.yellow(
           `\nResponse contains binary ${ext.toUpperCase()} data (${result.data.size} bytes).` +
-          `\nUse -o to save it: orth api run ${api} ${path}${bodyHint} -o output.${ext}`
+          `\nUse -o to save it: orth api run ${api} ${path}${methodHint}${queryHint}${bodyHint} -o output.${ext}`
         ));
         return;
       }
