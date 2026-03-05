@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import ora from "ora";
-import { writeFileSync } from "fs";
+import { writeFileSync, existsSync } from "fs";
 import { resolve } from "path";
 import { run, RunResponse } from "../api.js";
 
@@ -18,6 +18,8 @@ const CONTENT_TYPE_EXT: Record<string, string> = {
   "audio/wav": "wav",
   "video/mp4": "mp4",
 };
+
+const VALID_ENCODINGS = new Set(["base64", "hex", "utf8", "utf-8", "ascii", "latin1", "binary"]);
 
 function extFromContentType(contentType: string): string {
   // Try exact match first, then prefix match
@@ -45,7 +47,8 @@ function isBinaryEnvelope(data: unknown): data is BinaryEnvelope {
     (data as any)._binary === true &&
     typeof (data as any).data === "string" &&
     typeof (data as any).encoding === "string" &&
-    typeof (data as any).contentType === "string"
+    typeof (data as any).contentType === "string" &&
+    typeof (data as any).size === "number"
   );
 }
 
@@ -125,16 +128,27 @@ export async function runCommand(
     if (isBinaryEnvelope(result.data)) {
       if (!options.output) {
         const ext = extFromContentType(result.data.contentType);
+        const bodyHint = options.body || options.data ? " --body '...'" : "";
         console.log(chalk.yellow(
           `\nResponse contains binary ${ext.toUpperCase()} data (${result.data.size} bytes).` +
-          `\nUse -o to save it: orth api run ${api} ${path} --body '...' -o output.${ext}`
+          `\nUse -o to save it: orth api run ${api} ${path}${bodyHint} -o output.${ext}`
         ));
         return;
       }
 
       const ext = extFromContentType(result.data.contentType);
       const outputPath = resolve(options.output);
-      const buffer = Buffer.from(result.data.data, result.data.encoding as BufferEncoding);
+
+      if (existsSync(outputPath)) {
+        console.error(chalk.red(`\nError: File already exists: ${outputPath}`));
+        console.error(chalk.gray("Remove it first or choose a different path."));
+        process.exit(1);
+      }
+
+      const encoding = VALID_ENCODINGS.has(result.data.encoding)
+        ? result.data.encoding as BufferEncoding
+        : "base64";
+      const buffer = Buffer.from(result.data.data, encoding);
       writeFileSync(outputPath, buffer);
       console.log(chalk.green(`\n${ext.toUpperCase()} saved to: ${outputPath} (${buffer.length} bytes)`));
       return;
@@ -143,6 +157,11 @@ export async function runCommand(
     // If --output specified for non-binary data, save JSON to file
     if (options.output) {
       const outputPath = resolve(options.output);
+      if (existsSync(outputPath)) {
+        console.error(chalk.red(`\nError: File already exists: ${outputPath}`));
+        console.error(chalk.gray("Remove it first or choose a different path."));
+        process.exit(1);
+      }
       writeFileSync(outputPath, JSON.stringify(result.data, null, 2));
       console.log(chalk.green(`\nResponse saved to: ${outputPath}`));
       return;
