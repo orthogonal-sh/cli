@@ -44,7 +44,8 @@ function isBinaryEnvelope(data: unknown): data is BinaryEnvelope {
     data !== null &&
     (data as any)._binary === true &&
     typeof (data as any).data === "string" &&
-    typeof (data as any).encoding === "string"
+    typeof (data as any).encoding === "string" &&
+    typeof (data as any).contentType === "string"
   );
 }
 
@@ -122,12 +123,18 @@ export async function runCommand(
 
     // Handle binary responses (base64-encoded by the server)
     if (isBinaryEnvelope(result.data)) {
-      const ext = extFromContentType(result.data.contentType);
-      const outputPath = options.output
-        ? resolve(options.output)
-        : resolve(`${api.replace(/\//g, "-")}-output.${ext}`);
+      if (!options.output) {
+        const ext = extFromContentType(result.data.contentType);
+        console.log(chalk.yellow(
+          `\nResponse contains binary ${ext.toUpperCase()} data (${result.data.size} bytes).` +
+          `\nUse -o to save it: orth api run ${api} ${path} --body '...' -o output.${ext}`
+        ));
+        return;
+      }
 
-      const buffer = Buffer.from(result.data.data, "base64");
+      const ext = extFromContentType(result.data.contentType);
+      const outputPath = resolve(options.output);
+      const buffer = Buffer.from(result.data.data, result.data.encoding as BufferEncoding);
       writeFileSync(outputPath, buffer);
       console.log(chalk.green(`\n${ext.toUpperCase()} saved to: ${outputPath} (${buffer.length} bytes)`));
       return;
