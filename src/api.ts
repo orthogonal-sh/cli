@@ -1,6 +1,7 @@
 import { requireApiKey } from "./config.js";
 
 const BASE_URL = "https://api.orth.sh/v1";
+const INTERNAL_BASE_URL = "https://api.orth.sh";
 
 interface ApiResponse<T = unknown> {
   success?: boolean;
@@ -252,4 +253,47 @@ export async function integrate(
     method: "POST",
     body: { api, path, format },
   });
+}
+
+// Unauthenticated request for device auth endpoints
+export async function unauthenticatedRequest<T = unknown>(
+  endpoint: string,
+  options: {
+    method?: string;
+    body?: unknown;
+  } = {},
+): Promise<T> {
+  const headers: Record<string, string> = {
+    "x-orthogonal-source": "cli",
+  };
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  let res: Response;
+  try {
+    res = await fetch(`${INTERNAL_BASE_URL}${endpoint}`, {
+      method: options.method || "GET",
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  let data: Record<string, unknown>;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(`Request failed with status ${res.status}`);
+  }
+
+  if (!res.ok) {
+    throw new Error((data.error as string) || (data.message as string) || `Request failed with status ${res.status}`);
+  }
+
+  return data as T;
 }

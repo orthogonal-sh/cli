@@ -44,6 +44,7 @@
     "commander": "^12.0.0",
     "conf": "^12.0.0",
     "node-fetch": "^3.3.2",
+    "open": "^10.2.0",
     "ora": "^8.0.1"
   },
   "devDependencies": {
