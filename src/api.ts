@@ -140,7 +140,6 @@ export interface RunResponse {
   success: boolean;
   data: unknown;
   price?: string;
-  priceCents?: number;
   requestId?: string;
 }
 
