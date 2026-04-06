@@ -1,16 +1,24 @@
 import chalk from "chalk";
+import { exec } from "child_process";
 import crypto from "crypto";
 import http from "http";
 import { getApiKey, setApiKey, clearApiKey } from "../config.js";
 
-const API_BASE = process.env.ORTH_API_URL || "https://api.orth.sh";
 const WEB_BASE = process.env.ORTH_WEB_URL || "https://orthogonal.sh";
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function openBrowser(url: string) {
-  const { exec } = require("child_process");
   const platform = process.platform;
   if (platform === "darwin") exec(`open "${url}"`);
-  else if (platform === "win32") exec(`start "${url}"`);
+  else if (platform === "win32") exec(`start "" "${url}"`);
   else exec(`xdg-open "${url}"`);
 }
 
@@ -19,6 +27,8 @@ async function browserLogin(): Promise<void> {
   const state = crypto.randomBytes(32).toString("hex");
 
   return new Promise((resolve, reject) => {
+    let timeoutHandle: ReturnType<typeof setTimeout>;
+
     const server = http.createServer((req, res) => {
       const url = new URL(req.url || "/", `http://localhost`);
 
@@ -29,6 +39,7 @@ async function browserLogin(): Promise<void> {
 
         // Verify state token
         if (returnedState !== state) {
+          clearTimeout(timeoutHandle);
           res.writeHead(403, { "Content-Type": "text/html" });
           res.end(`
             <html>
@@ -47,6 +58,7 @@ async function browserLogin(): Promise<void> {
         }
 
         if (key) {
+          clearTimeout(timeoutHandle);
           // Send a nice HTML response
           res.writeHead(200, { "Content-Type": "text/html" });
           res.end(`
@@ -67,13 +79,15 @@ async function browserLogin(): Promise<void> {
           server.close();
           resolve();
         } else {
+          clearTimeout(timeoutHandle);
+          const safeError = escapeHtml(error || "Unknown error");
           res.writeHead(400, { "Content-Type": "text/html" });
           res.end(`
             <html>
               <body style="font-family: -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f0f0f0;">
                 <div style="text-align: center; background: white; padding: 48px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                   <h1 style="font-size: 24px; margin: 0 0 8px; color: #e11d48;">Authentication Failed</h1>
-                  <p style="color: #666; margin: 0;">${error || "Unknown error"}</p>
+                  <p style="color: #666; margin: 0;">${safeError}</p>
                 </div>
               </body>
             </html>
@@ -106,7 +120,7 @@ async function browserLogin(): Promise<void> {
       openBrowser(authUrl);
 
       // Timeout after 5 minutes
-      setTimeout(() => {
+      timeoutHandle = setTimeout(() => {
         console.log(chalk.red("\n✗ Login timed out. Try again."));
         server.close();
         reject(new Error("Timed out"));
@@ -114,6 +128,7 @@ async function browserLogin(): Promise<void> {
     });
 
     server.on("error", (err) => {
+      clearTimeout(timeoutHandle);
       reject(err);
     });
   });
