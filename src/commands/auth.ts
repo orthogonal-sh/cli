@@ -16,10 +16,12 @@ function escapeHtml(str: string): string {
 }
 
 function openBrowser(url: string) {
+  // Use execFile-style args to avoid shell injection
+  const { execFile } = require("child_process");
   const platform = process.platform;
-  if (platform === "darwin") exec(`open "${url}"`);
-  else if (platform === "win32") exec(`start "" "${url}"`);
-  else exec(`xdg-open "${url}"`);
+  if (platform === "darwin") execFile("open", [url]);
+  else if (platform === "win32") execFile("cmd", ["/c", "start", "", url]);
+  else execFile("xdg-open", [url]);
 }
 
 async function browserLogin(): Promise<void> {
