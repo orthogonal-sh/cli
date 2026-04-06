@@ -628,7 +628,7 @@ function parseFrontmatter(content: string): {
 
 export async function skillsSubmitCommand(
   inputPath: string | undefined,
-  options: { name?: string; tags?: string },
+  options: { name?: string; tags?: string; org?: string },
 ) {
   const dirPath = inputPath ? path.resolve(inputPath) : process.cwd();
   const spinner = ora("Reading skill files...").start();
@@ -722,6 +722,7 @@ export async function skillsSubmitCommand(
           })),
           tags,
           discoverable: false,
+          ...(options.org ? { organizationId: options.org } : {}),
         },
       },
     );
