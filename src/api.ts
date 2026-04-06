@@ -1,6 +1,6 @@
 import { requireApiKey } from "./config.js";
 
-const BASE_URL = "https://api.orth.sh/v1";
+const BASE_URL = process.env.ORTH_API_URL || "https://api.orth.sh/v1";
 
 interface ApiResponse<T = unknown> {
   success?: boolean;

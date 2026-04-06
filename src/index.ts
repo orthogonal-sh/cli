@@ -211,6 +211,7 @@ skillsGroup
   .description("Submit a local skill to the Orthogonal platform")
   .option("-n, --name <name>", "Override skill name from frontmatter")
   .option("-t, --tags <tags>", "Comma-separated tags")
+  .option("--org <orgId>", "Submit to an organization instead of personal account")
   .action(asyncAction(async (inputPath: string | undefined, options) => {
     trackEvent("skills.submit", { path: inputPath });
     await skillsSubmitCommand(inputPath, options);
@@ -256,6 +257,7 @@ skillsGroup
 
 skillsGroup
   .command("add <slug>")
+  .alias("install")
   .description("Add a skill to your local agent skills directories")
   .option(
     "--agent <agent>",
@@ -288,7 +290,7 @@ skillsGroup
 // ─────────────────────────────────────────────────────────────────────────────
 program
   .command("search <query>")
-  .description("Search for APIs (alias for 'ortho api search')")
+  .description("Search for APIs (alias for 'orth api search')")
   .option("-l, --limit <number>", "Max results", "10")
   .action(asyncAction(async (query: string, options) => {
     trackEvent("search", { query });
@@ -297,7 +299,7 @@ program
 
 program
   .command("run <api> <path>")
-  .description("Call an API endpoint (alias for 'ortho api run')")
+  .description("Call an API endpoint (alias for 'orth api run')")
   .option("-X, --method <method>", "HTTP method", "GET")
   .option("-q, --query <params...>", "Query params (key=value)")
   .option("-b, --body <json>", "Request body JSON")
@@ -311,7 +313,7 @@ program
 
 program
   .command("code <api> <path>")
-  .description("Generate integration code (alias for 'ortho api code')")
+  .description("Generate integration code (alias for 'orth api code')")
   .option(
     "-l, --lang <language>",
     "Language: typescript, python, curl",
