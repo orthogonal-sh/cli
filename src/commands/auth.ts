@@ -74,6 +74,14 @@ async function browserLogin(): Promise<void> {
             </html>
           `);
 
+          if (!key.startsWith("orth_")) {
+            console.log(chalk.red("\n✗ Invalid API key format received"));
+            server.close();
+            clearTimeout(timeoutHandle);
+            reject(new Error("Invalid key format"));
+            return;
+          }
+
           setApiKey(key);
           console.log(chalk.green("\n✓ Logged in successfully!"));
           console.log(chalk.gray(`  Key: ${key.slice(0, 15)}...${key.slice(-4)}`));
