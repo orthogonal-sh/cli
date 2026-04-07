@@ -88,6 +88,7 @@ export async function tasksListCommand() {
   } catch (err: any) {
     spinner.fail("Failed to fetch tasks");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }
 
@@ -143,6 +144,7 @@ export async function tasksCreateCommand(options: {
   } catch (err: any) {
     spinner.fail("Failed to create task");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }
 
@@ -166,6 +168,7 @@ export async function tasksShowCommand(taskId: string) {
   } catch (err: any) {
     spinner.fail("Failed to fetch task");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }
 
@@ -177,6 +180,7 @@ export async function tasksDeleteCommand(taskId: string) {
   } catch (err: any) {
     spinner.fail("Failed to delete task");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }
 
@@ -188,6 +192,7 @@ export async function tasksPauseCommand(taskId: string) {
   } catch (err: any) {
     spinner.fail("Failed to pause task");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }
 
@@ -199,6 +204,7 @@ export async function tasksResumeCommand(taskId: string) {
   } catch (err: any) {
     spinner.fail("Failed to resume task");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }
 
@@ -210,11 +216,12 @@ export async function tasksTriggerCommand(taskId: string) {
   } catch (err: any) {
     spinner.fail("Failed to trigger task");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }
 
 export async function tasksLogsCommand(taskId: string, options: { limit?: string }) {
-  const limit = parseInt(options.limit || "10");
+  const limit = parseInt(options.limit || "10") || 10;
   const spinner = ora("Fetching run history...").start();
   try {
     const data = await apiRequest<{ runs: TaskRun[]; total: number }>(
@@ -229,7 +236,7 @@ export async function tasksLogsCommand(taskId: string, options: { limit?: string
 
     console.log(chalk.bold(`\nRun History (${data.total} total)\n`));
     for (const run of data.runs) {
-      const duration = run.duration_ms ? `${(run.duration_ms / 1000).toFixed(0)}s` : "—";
+      const duration = run.duration_ms != null ? `${(run.duration_ms / 1000).toFixed(0)}s` : "—";
       const time = run.started_at ? new Date(run.started_at).toLocaleString() : "—";
       console.log(`  ${statusBadge(run.status)}  ${chalk.gray(time)}  ${chalk.gray(duration)}`);
       if (run.error) {
@@ -244,5 +251,6 @@ export async function tasksLogsCommand(taskId: string, options: { limit?: string
   } catch (err: any) {
     spinner.fail("Failed to fetch run history");
     console.error(chalk.red(err.message));
+    process.exit(1);
   }
 }

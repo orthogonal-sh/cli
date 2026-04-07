@@ -315,7 +315,7 @@ tasksGroup
   .description("Create a new scheduled task")
   .requiredOption("-s, --skill <slug>", "Skill to run")
   .option("-n, --name <name>", "Task name")
-  .option("--schedule <cron>", "Cron expression or preset (every-hour, every-day-9am, every-weekday-9am, every-monday, every-month)")
+  .option("--schedule <cron>", "Cron expression or preset (every-5-min, every-hour, every-day-9am, every-weekday-9am, every-monday, every-month)")
   .option("-i, --input <pairs...>", "Skill input as key=value pairs")
   .action(asyncAction(async (options) => {
     trackEvent("tasks.create", { skill: options.skill });
