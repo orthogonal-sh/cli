@@ -20,6 +20,7 @@ import {
   skillsUpdateCommand,
   skillsPushCommand,
   skillsRequestVerificationCommand,
+  skillsMineCommand,
 } from "./commands/skills.js";
 import { apiRequestCommand } from "./commands/apiRequest.js";
 import {
@@ -187,6 +188,15 @@ skillsGroup
   .action(asyncAction(async (options) => {
     trackEvent("skills.list");
     await skillsListCommand(options);
+  }));
+
+skillsGroup
+  .command("mine")
+  .description("List your own skills")
+  .option("-l, --limit <number>", "Max results", "50")
+  .action(asyncAction(async (options) => {
+    trackEvent("skills.mine");
+    await skillsMineCommand(options);
   }));
 
 skillsGroup

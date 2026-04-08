@@ -124,6 +124,51 @@ export async function skillsListCommand(options: { limit: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// orth skills mine
+// ─────────────────────────────────────────────────────────────────────────────
+export async function skillsMineCommand(options: { limit: string }) {
+  const spinner = ora("Loading your skills...").start();
+
+  try {
+    const limit = parseInt(options.limit, 10) || 50;
+    const data = await apiRequest<{ skills: Array<{ name: string; slug: string; description?: string; tags?: string[]; verified: boolean; discoverable: boolean; installCount: number; fileCount: number; status: string }>; total: number }>(`/skills/mine?limit=${limit}`);
+    spinner.stop();
+
+    if (!data.skills || data.skills.length === 0) {
+      console.log(chalk.gray("\n  No skills yet. Create one with: orth skills init\n"));
+      return;
+    }
+
+    console.log(chalk.bold(`\nYour Skills (${data.total} total):\n`));
+
+    for (const skill of data.skills) {
+      const verified = skill.verified ? chalk.blue(" ✓") : "";
+      const discoverable = skill.discoverable ? chalk.green(" [public]") : chalk.gray(" [private]");
+      const files = chalk.gray(`${skill.fileCount} files`);
+
+      console.log(
+        `  ${chalk.cyan.bold(skill.name)}${verified}${discoverable}  ${files}`,
+      );
+      console.log(`    Slug: ${chalk.white(skill.slug)}`);
+
+      if (skill.description) {
+        console.log(
+          chalk.gray(`    ${skill.description.slice(0, 100)}${skill.description.length > 100 ? "..." : ""}`),
+        );
+      }
+      console.log();
+    }
+  } catch (error) {
+    spinner.stop();
+    console.error(
+      chalk.red("Failed to load skills:"),
+      error instanceof Error ? error.message : String(error),
+    );
+    process.exit(1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // orth skills search <query>
 // ─────────────────────────────────────────────────────────────────────────────
 export async function skillsSearchCommand(
