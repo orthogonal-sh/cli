@@ -1,7 +1,7 @@
 import { getApiKey } from "./config.js";
 
 const CLI_VERSION = process.env.npm_package_version || "0.2.0";
-const BASE_URL = "https://api.orth.sh/v1";
+const BASE_URL = "https://api.orthogonal.com/v1";
 
 /**
  * Fire-and-forget analytics event for CLI usage tracking.
