@@ -181,6 +181,11 @@ export async function runCommand(
       console.log(JSON.stringify(result.data, null, 2));
     }
 
+    // Show price if returned
+    if (result.price) {
+      console.log(chalk.dim(`\nCost: ${result.price}`));
+    }
+
   } catch (error) {
     spinner.stop();
     console.error(chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`));
