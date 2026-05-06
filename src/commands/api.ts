@@ -72,12 +72,13 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       // Show price
       const endpointPrice = data.price ?? data.endpoint?.price;
       if (endpointPrice !== undefined && endpointPrice !== null) {
+        const isFree = endpointPrice === 0 || endpointPrice === "free" || endpointPrice === "0";
         const priceDisplay = typeof endpointPrice === 'string'
           ? endpointPrice
           : `$${(Number(endpointPrice) / 1000000).toFixed(4)}`;
         console.log(
           chalk.bold("Price: ") +
-          (Number(endpointPrice) === 0 ? chalk.green("free") : chalk.yellow(priceDisplay))
+          (isFree ? chalk.green("free") : chalk.yellow(priceDisplay))
         );
       }
 
@@ -168,11 +169,13 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
 
       for (const endpoint of apiData.endpoints) {
         const method = chalk.yellow(endpoint.method.padEnd(6));
-        const price = endpoint.price === 0 || endpoint.price === null || endpoint.price === undefined
+        const ep = endpoint.price as number | string | null | undefined;
+        const isFreePrice = ep === 0 || ep == null || ep === "free" || ep === "0";
+        const price = isFreePrice
           ? chalk.green("free")
-          : typeof endpoint.price === 'string'
-            ? chalk.dim(endpoint.price)
-            : chalk.dim(`$${(Number(endpoint.price) / 1000000).toFixed(4)}`);
+          : typeof ep === 'string'
+            ? chalk.dim(ep)
+            : chalk.dim(`$${(Number(ep) / 1000000).toFixed(4)}`);
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
@@ -198,11 +201,13 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
 
       for (const endpoint of api.endpoints) {
         const method = chalk.yellow(endpoint.method.padEnd(6));
-        const price = endpoint.price === 0 || endpoint.price === null || endpoint.price === undefined
+        const ep2 = endpoint.price as number | string | null | undefined;
+        const isFreePrice = ep2 === 0 || ep2 == null || ep2 === "free" || ep2 === "0";
+        const price = isFreePrice
           ? chalk.green("free")
-          : typeof endpoint.price === 'string'
-            ? chalk.dim(endpoint.price)
-            : chalk.dim(`$${(Number(endpoint.price) / 1000000).toFixed(4)}`);
+          : typeof ep2 === 'string'
+            ? chalk.dim(ep2)
+            : chalk.dim(`$${(Number(ep2) / 1000000).toFixed(4)}`);
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
