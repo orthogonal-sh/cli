@@ -150,7 +150,7 @@ export async function runCommand(
     // Handle dry-run response
     if (result.dryRun) {
       const estimatedCost = result.estimatedPrice ||
-        (result.estimatedPriceCents != null && result.estimatedPriceCents > 0
+        (result.estimatedPriceCents != null
           ? `$${parseFloat((result.estimatedPriceCents / 100).toFixed(4))}`
           : null) ||
         result.price ||
