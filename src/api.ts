@@ -93,6 +93,8 @@ export interface DetailsResponse {
   method?: string;
   description?: string;
   price?: number | string;
+  hasDynamicPricing?: boolean;
+  pricing_formula?: string;
   parameters?: {
     query?: Array<{
       name: string;
@@ -142,6 +144,9 @@ export interface RunResponse {
   price?: string;
   priceCents?: number;
   requestId?: string;
+  dryRun?: boolean;
+  estimatedPrice?: string;
+  estimatedPriceCents?: number;
 }
 
 export interface IntegrateResponse {
@@ -228,6 +233,7 @@ export async function run(
     method?: string;
     query?: Record<string, string>;
     body?: unknown;
+    dryRun?: boolean;
   } = {},
 ): Promise<RunResponse> {
   return apiRequest<RunResponse>("/run", {
@@ -238,6 +244,7 @@ export async function run(
       method: options.method || "GET",
       query: options.query,
       body: options.body,
+      dryRun: options.dryRun || false,
     },
   });
 }
