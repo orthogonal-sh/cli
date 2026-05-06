@@ -65,6 +65,14 @@ function isBinaryEnvelope(data: unknown): data is BinaryEnvelope {
   );
 }
 
+function formatCost(result: RunResponse): string | null {
+  if (result.price) return result.price;
+  if (result.priceCents != null && result.priceCents > 0) {
+    return `$${parseFloat((result.priceCents / 100).toFixed(4))}`;
+  }
+  return null;
+}
+
 export async function runCommand(
   api: string,
   path: string,
@@ -148,7 +156,8 @@ export async function runCommand(
           `\nResponse contains binary ${ext.toUpperCase()} data (${result.data.size} bytes).` +
           `\nUse -o to save it: orth api run ${api} ${path}${methodHint}${queryHint}${bodyHint} -o output.${ext}`
         ));
-        if (result.price) console.log(chalk.dim(`\nCost: ${result.price}`));
+        const cost0 = formatCost(result);
+        if (cost0) console.log(chalk.dim(`\nCost: ${cost0}`));
         return;
       }
 
@@ -163,7 +172,8 @@ export async function runCommand(
       const buffer = Buffer.from(result.data.data, result.data.encoding as BufferEncoding);
       writeExclusive(outputPath, buffer);
       console.log(chalk.green(`\n${ext.toUpperCase()} saved to: ${outputPath} (${buffer.length} bytes)`));
-      if (result.price) console.log(chalk.dim(`\nCost: ${result.price}`));
+      const cost1 = formatCost(result);
+      if (cost1) console.log(chalk.dim(`\nCost: ${cost1}`));
       return;
     }
 
@@ -172,7 +182,8 @@ export async function runCommand(
       const outputPath = resolve(options.output);
       writeExclusive(outputPath, JSON.stringify(result.data, null, 2));
       console.log(chalk.green(`\nResponse saved to: ${outputPath}`));
-      if (result.price) console.log(chalk.dim(`\nCost: ${result.price}`));
+      const cost2 = formatCost(result);
+      if (cost2) console.log(chalk.dim(`\nCost: ${cost2}`));
       return;
     }
 
@@ -185,8 +196,9 @@ export async function runCommand(
     }
 
     // Show price if returned
-    if (result.price) {
-      console.log(chalk.dim(`\nCost: ${result.price}`));
+    const cost3 = formatCost(result);
+    if (cost3) {
+      console.log(chalk.dim(`\nCost: ${cost3}`));
     }
 
   } catch (error) {
