@@ -75,7 +75,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         const isFree = endpointPrice === 0 || endpointPrice === "free" || endpointPrice === "0";
         const priceDisplay = typeof endpointPrice === 'string'
           ? endpointPrice
-          : `$${parseFloat((Number(endpointPrice) / 1000000).toFixed(4))}`;
+          : `$${parseFloat(Number(endpointPrice).toFixed(4))}`;
         console.log(
           chalk.bold("Price: ") +
           (isFree ? chalk.green("free") : chalk.yellow(priceDisplay))
@@ -175,7 +175,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
           ? chalk.green("free")
           : typeof ep === 'string'
             ? chalk.dim(ep)
-            : chalk.dim(`$${parseFloat((Number(ep) / 1000000).toFixed(4))}`);
+            : chalk.dim(`$${parseFloat(Number(ep).toFixed(4))}`);
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
@@ -207,7 +207,8 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
           ? chalk.green("free")
           : typeof ep2 === 'string'
             ? chalk.dim(ep2)
-            : chalk.dim(`$${parseFloat((Number(ep2) / 1000000).toFixed(4))}`);
+            : chalk.dim(`$${parseFloat(Number(ep2).toFixed(4))}`);
+
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
