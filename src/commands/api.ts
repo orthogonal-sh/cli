@@ -71,7 +71,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
 
       // Show price
       const endpointPrice = data.price ?? data.endpoint?.price;
-      const isDynamic = data.hasDynamicPricing || !!(data as any).pricing_formula;
+      const isDynamic = data.hasDynamicPricing || !!data.pricing_formula;
       if (isDynamic) {
         console.log(
           chalk.bold("Price: ") +
@@ -82,7 +82,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         const isFree = endpointPrice === 0 || endpointPrice === "free" || endpointPrice === "0";
         const priceDisplay = typeof endpointPrice === 'string'
           ? endpointPrice
-          : `$${parseFloat((Number(endpointPrice) / 1000000).toFixed(4))}`;
+          : `$${parseFloat(Number(endpointPrice).toFixed(4))}`;
         console.log(
           chalk.bold("Price: ") +
           (isFree ? chalk.green("free") : chalk.yellow(priceDisplay))
@@ -177,8 +177,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       for (const endpoint of apiData.endpoints) {
         const method = chalk.yellow(endpoint.method.padEnd(6));
         const ep = endpoint.price as number | string | null | undefined;
-        const epAny = endpoint as any;
-        const epIsDynamic = epAny.hasDynamicPricing || !!epAny.pricing_formula;
+        const epIsDynamic = endpoint.hasDynamicPricing || !!endpoint.pricing_formula;
         const price = epIsDynamic
           ? chalk.dim("dynamic")
           : (() => {
@@ -187,7 +186,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
                 ? chalk.green("free")
                 : typeof ep === 'string'
                   ? chalk.dim(ep)
-                  : chalk.dim(`$${parseFloat((Number(ep) / 1000000).toFixed(4))}`);
+                  : chalk.dim(`$${parseFloat(Number(ep).toFixed(4))}`);
             })();
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
@@ -215,8 +214,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       for (const endpoint of api.endpoints) {
         const method = chalk.yellow(endpoint.method.padEnd(6));
         const ep2 = endpoint.price as number | string | null | undefined;
-        const epAny2 = endpoint as any;
-        const epIsDynamic2 = epAny2.hasDynamicPricing || !!epAny2.pricing_formula;
+        const epIsDynamic2 = endpoint.hasDynamicPricing || !!endpoint.pricing_formula;
         const price = epIsDynamic2
           ? chalk.dim("dynamic")
           : (() => {
@@ -225,7 +223,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
                 ? chalk.green("free")
                 : typeof ep2 === 'string'
                   ? chalk.dim(ep2)
-                  : chalk.dim(`$${parseFloat((Number(ep2) / 1000000).toFixed(4))}`);
+                  : chalk.dim(`$${parseFloat(Number(ep2).toFixed(4))}`);
             })();
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {

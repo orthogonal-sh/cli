@@ -149,7 +149,12 @@ export async function runCommand(
 
     // Handle dry-run response
     if (result.dryRun) {
-      const estimatedCost = result.estimatedPrice || formatCost(result) || "unknown";
+      const estimatedCost = result.estimatedPrice ||
+        (result.estimatedPriceCents != null && result.estimatedPriceCents > 0
+          ? `$${parseFloat((result.estimatedPriceCents / 100).toFixed(4))}`
+          : null) ||
+        result.price ||
+        "unknown";
       console.log(chalk.bold("\nEstimated cost: ") + chalk.yellow(estimatedCost));
       console.log(chalk.gray("(Use without --dry-run to execute)"));
       return;

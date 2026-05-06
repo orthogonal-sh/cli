@@ -81,6 +81,8 @@ export interface SearchResponse {
       method: string;
       description: string;
       price?: number;
+      hasDynamicPricing?: boolean;
+      pricing_formula?: string;
     }>;
   }>;
   count: number;
@@ -205,6 +207,8 @@ export interface ApiBySlugResponse {
     description?: string;
     price?: number;
     isPayable?: boolean;
+    hasDynamicPricing?: boolean;
+    pricing_formula?: string;
     docsUrl?: string;
     queryParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
     bodyParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
@@ -244,7 +248,7 @@ export async function run(
       method: options.method || "GET",
       query: options.query,
       body: options.body,
-      dryRun: options.dryRun || false,
+      dryRun: options.dryRun,
     },
   });
 }
