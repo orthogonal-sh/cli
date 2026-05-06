@@ -83,6 +83,7 @@ export async function runCommand(
     data?: string;
     raw?: boolean;
     output?: string;
+    dryRun?: boolean;
   }
 ) {
   const spinner = ora(`Calling ${api}${path}...`).start();
@@ -141,9 +142,23 @@ export async function runCommand(
       method: options.method,
       query: Object.keys(query).length > 0 ? query : undefined,
       body,
+      dryRun: options.dryRun,
     });
 
     spinner.stop();
+
+    // Handle dry-run response
+    if (result.dryRun) {
+      const estimatedCost = result.estimatedPrice ||
+        (result.estimatedPriceCents != null
+          ? `$${parseFloat((result.estimatedPriceCents / 100).toFixed(4))}`
+          : null) ||
+        result.price ||
+        "unknown";
+      console.log(chalk.bold("\nEstimated cost: ") + chalk.yellow(estimatedCost));
+      console.log(chalk.gray("(Use without --dry-run to execute)"));
+      return;
+    }
 
     // Handle binary responses (base64-encoded by the server)
     if (isBinaryEnvelope(result.data)) {

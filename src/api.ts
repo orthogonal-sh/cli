@@ -81,6 +81,8 @@ export interface SearchResponse {
       method: string;
       description: string;
       price?: number;
+      hasDynamicPricing?: boolean;
+      pricing_formula?: string;
     }>;
   }>;
   count: number;
@@ -93,6 +95,8 @@ export interface DetailsResponse {
   method?: string;
   description?: string;
   price?: number | string;
+  hasDynamicPricing?: boolean;
+  pricing_formula?: string;
   parameters?: {
     query?: Array<{
       name: string;
@@ -142,6 +146,9 @@ export interface RunResponse {
   price?: string;
   priceCents?: number;
   requestId?: string;
+  dryRun?: boolean;
+  estimatedPrice?: string;
+  estimatedPriceCents?: number;
 }
 
 export interface IntegrateResponse {
@@ -200,6 +207,8 @@ export interface ApiBySlugResponse {
     description?: string;
     price?: number;
     isPayable?: boolean;
+    hasDynamicPricing?: boolean;
+    pricing_formula?: string;
     docsUrl?: string;
     queryParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
     bodyParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
@@ -228,6 +237,7 @@ export async function run(
     method?: string;
     query?: Record<string, string>;
     body?: unknown;
+    dryRun?: boolean;
   } = {},
 ): Promise<RunResponse> {
   return apiRequest<RunResponse>("/run", {
@@ -238,6 +248,7 @@ export async function run(
       method: options.method || "GET",
       query: options.query,
       body: options.body,
+      dryRun: options.dryRun,
     },
   });
 }
