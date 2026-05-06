@@ -69,6 +69,18 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
       const desc = data.description || data.endpoint?.description || data.action?.description;
       console.log(chalk.gray(desc || "No description"));
 
+      // Show price
+      const endpointPrice = data.price ?? data.endpoint?.price;
+      if (endpointPrice !== undefined && endpointPrice !== null) {
+        const priceDisplay = typeof endpointPrice === 'string'
+          ? endpointPrice
+          : `$${(Number(endpointPrice) / 1000000).toFixed(4)}`;
+        console.log(
+          chalk.bold("Price: ") +
+          (Number(endpointPrice) === 0 ? chalk.green("free") : chalk.yellow(priceDisplay))
+        );
+      }
+
       // Get params from nested endpoint or action object if needed
       const actionParams = data.action?.parameters ?? [];
       const queryParams = data.parameters?.query || data.endpoint?.queryParams || [];
@@ -158,7 +170,9 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         const method = chalk.yellow(endpoint.method.padEnd(6));
         const price = endpoint.price === 0 || endpoint.price === null || endpoint.price === undefined
           ? chalk.green("free")
-          : "";
+          : typeof endpoint.price === 'string'
+            ? chalk.dim(endpoint.price)
+            : chalk.dim(`$${(Number(endpoint.price) / 1000000).toFixed(4)}`);
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
@@ -186,7 +200,9 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
         const method = chalk.yellow(endpoint.method.padEnd(6));
         const price = endpoint.price === 0 || endpoint.price === null || endpoint.price === undefined
           ? chalk.green("free")
-          : "";
+          : typeof endpoint.price === 'string'
+            ? chalk.dim(endpoint.price)
+            : chalk.dim(`$${(Number(endpoint.price) / 1000000).toFixed(4)}`);
         console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));

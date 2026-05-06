@@ -148,6 +148,7 @@ export async function runCommand(
           `\nResponse contains binary ${ext.toUpperCase()} data (${result.data.size} bytes).` +
           `\nUse -o to save it: orth api run ${api} ${path}${methodHint}${queryHint}${bodyHint} -o output.${ext}`
         ));
+        if (result.price) console.log(chalk.dim(`\nCost: ${result.price}`));
         return;
       }
 
@@ -162,6 +163,7 @@ export async function runCommand(
       const buffer = Buffer.from(result.data.data, result.data.encoding as BufferEncoding);
       writeExclusive(outputPath, buffer);
       console.log(chalk.green(`\n${ext.toUpperCase()} saved to: ${outputPath} (${buffer.length} bytes)`));
+      if (result.price) console.log(chalk.dim(`\nCost: ${result.price}`));
       return;
     }
 
@@ -170,6 +172,7 @@ export async function runCommand(
       const outputPath = resolve(options.output);
       writeExclusive(outputPath, JSON.stringify(result.data, null, 2));
       console.log(chalk.green(`\nResponse saved to: ${outputPath}`));
+      if (result.price) console.log(chalk.dim(`\nCost: ${result.price}`));
       return;
     }
 
@@ -179,6 +182,11 @@ export async function runCommand(
       // Pretty print the response
       console.log(chalk.bold("\nResponse:\n"));
       console.log(JSON.stringify(result.data, null, 2));
+    }
+
+    // Show price if returned
+    if (result.price) {
+      console.log(chalk.dim(`\nCost: ${result.price}`));
     }
 
   } catch (error) {
