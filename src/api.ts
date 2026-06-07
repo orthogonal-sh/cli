@@ -31,7 +31,15 @@ export async function apiRequest<T = unknown>(
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
 
-  const data = (await res.json()) as ApiResponse<T>;
+  // Parse defensively: error responses (e.g. a bare 404) may return an empty
+  // or non-JSON body, which would otherwise throw here and lose the status.
+  const rawBody = await res.text();
+  let data: ApiResponse<T>;
+  try {
+    data = (rawBody ? JSON.parse(rawBody) : {}) as ApiResponse<T>;
+  } catch {
+    data = {} as ApiResponse<T>;
+  }
 
   if (!res.ok || data.success === false) {
     // Include more details in error message
@@ -65,7 +73,11 @@ export async function apiRequest<T = unknown>(
       errorMsg += `\n  Details: ${JSON.stringify((data as any).details)}`;
     }
 
-    throw new Error(errorMsg);
+    // Attach the HTTP status so callers can branch on it reliably instead of
+    // string-matching the message (e.g. whoami treating 404 as "no /me").
+    const err = new Error(errorMsg) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
   }
 
   // Return the whole response, not just data field
@@ -263,4 +275,16 @@ export async function integrate(
     method: "POST",
     body: { api, path, format },
   });
+}
+
+export interface MeResponse {
+  type: "user" | "organization";
+  name?: string | null;
+  email?: string | null;
+  organizationId?: string;
+  apiKeyName?: string;
+}
+
+export async function getMe(): Promise<MeResponse> {
+  return apiRequest<MeResponse>("/me");
 }

@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import crypto from "crypto";
 import http from "http";
 import { getApiKey, setApiKey, clearApiKey } from "../config.js";
+import { getMe } from "../api.js";
 
 const WEB_BASE = process.env.ORTH_WEB_URL || "https://orthogonal.sh";
 
@@ -183,6 +184,33 @@ export async function whoamiCommand() {
   }
 
   console.log(chalk.green("✓ Authenticated"));
+
+  // Resolve the account behind the key. A 404 means the API predates the
+  // /me endpoint — fall back silently to the key-only output. Any other
+  // failure (auth, network, 5xx) is surfaced so it isn't hidden.
+  try {
+    const me = await getMe();
+
+    if (me.type === "organization") {
+      const label = me.apiKeyName ? `organization (${me.apiKeyName})` : "organization";
+      console.log(chalk.gray(`  Account: ${label}`));
+      if (me.organizationId) {
+        console.log(chalk.gray(`  Org ID: ${me.organizationId}`));
+      }
+    } else {
+      if (me.name) console.log(chalk.gray(`  Name: ${me.name}`));
+      if (me.email) console.log(chalk.gray(`  Email: ${me.email}`));
+    }
+  } catch (error) {
+    // A 404 means the API predates /me — fall back silently to key-only
+    // output. Surface anything else (auth, network, 5xx) so it isn't hidden.
+    const status = (error as { status?: number }).status;
+    if (status !== 404) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.log(chalk.yellow(`  Could not load account details: ${message}`));
+    }
+  }
+
   console.log(chalk.gray(`  Key: ${key.slice(0, 15)}...${key.slice(-4)}`));
   console.log(chalk.gray(`  Source: ${process.env.ORTHOGONAL_API_KEY ? "environment" : "config file"}`));
 }
