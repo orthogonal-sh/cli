@@ -202,8 +202,11 @@ export async function whoamiCommand() {
       if (me.email) console.log(chalk.gray(`  Email: ${me.email}`));
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!message.includes("404")) {
+    // A 404 means the API predates /me — fall back silently to key-only
+    // output. Surface anything else (auth, network, 5xx) so it isn't hidden.
+    const status = (error as { status?: number }).status;
+    if (status !== 404) {
+      const message = error instanceof Error ? error.message : String(error);
       console.log(chalk.yellow(`  Could not load account details: ${message}`));
     }
   }
