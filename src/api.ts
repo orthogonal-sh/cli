@@ -267,7 +267,6 @@ export async function integrate(
 
 export interface MeResponse {
   type: "user" | "organization";
-  userId?: string;
   name?: string | null;
   email?: string | null;
   organizationId?: string;
