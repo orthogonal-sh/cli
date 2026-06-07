@@ -264,3 +264,16 @@ export async function integrate(
     body: { api, path, format },
   });
 }
+
+export interface MeResponse {
+  type: "user" | "organization";
+  userId?: string;
+  name?: string | null;
+  email?: string | null;
+  organizationId?: string;
+  apiKeyName?: string;
+}
+
+export async function getMe(): Promise<MeResponse> {
+  return apiRequest<MeResponse>("/me");
+}

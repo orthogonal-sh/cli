@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import crypto from "crypto";
 import http from "http";
 import { getApiKey, setApiKey, clearApiKey } from "../config.js";
+import { getMe } from "../api.js";
 
 const WEB_BASE = process.env.ORTH_WEB_URL || "https://orthogonal.sh";
 
@@ -183,6 +184,25 @@ export async function whoamiCommand() {
   }
 
   console.log(chalk.green("✓ Authenticated"));
+
+  // Resolve the account behind the key. Fail soft so `whoami` still works
+  // against older API versions that don't expose /me.
+  try {
+    const me = await getMe();
+
+    if (me.type === "organization") {
+      console.log(chalk.gray(`  Account: organization`));
+      if (me.organizationId) {
+        console.log(chalk.gray(`  Org ID: ${me.organizationId}`));
+      }
+    } else {
+      if (me.name) console.log(chalk.gray(`  Name: ${me.name}`));
+      if (me.email) console.log(chalk.gray(`  Email: ${me.email}`));
+    }
+  } catch {
+    // Ignore — fall back to showing just the key details below.
+  }
+
   console.log(chalk.gray(`  Key: ${key.slice(0, 15)}...${key.slice(-4)}`));
   console.log(chalk.gray(`  Source: ${process.env.ORTHOGONAL_API_KEY ? "environment" : "config file"}`));
 }
