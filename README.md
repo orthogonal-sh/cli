@@ -104,17 +104,18 @@ orth skills show owner/skill-name
 ### Install Skills
 
 ```bash
-# Install a skill to all supported agents
+# Install a skill to project + all supported agents
 orth skills add owner/skill-name
 
-# Install for a specific agent only
+# Install for a specific agent only (skips project-local install)
 orth skills add owner/skill-name --agent cursor
 ```
 
-Installs to 7 agent skill directories:
+Installs to the project-local `.agent/skills/` directory and 7 global agent skill directories:
 
-| Agent | Directory |
-|-------|-----------|
+| Location | Directory |
+|----------|-----------|
+| **Project** | `.agent/skills/` (current directory) |
 | Cursor | `~/.cursor/skills/` |
 | Claude Code | `~/.claude/skills/` |
 | GitHub Copilot | `~/.github/skills/` |
@@ -122,6 +123,8 @@ Installs to 7 agent skill directories:
 | Codex | `~/.agents/skills/` |
 | Gemini | `~/.gemini/skills/` |
 | OpenClaw | `~/.openclaw/skills/` |
+
+The `.agent/skills/` directory is project-scoped — commit it to your repo so everyone on the team gets the same skills. Global directories are user-scoped and apply across all projects.
 
 ### Create & Publish Skills
 
