@@ -23,6 +23,10 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # NPM_TOKEN lives in the "production" environment, so the job must select it
+    # to access that secret. This also lets you add environment protection rules
+    # (e.g. required-reviewer approval) as a gate before any publish.
+    environment: production
     permissions:
       contents: write # push the version-bump commit + tag, create the Release
       id-token: write # npm publish --provenance
