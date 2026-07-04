@@ -4,8 +4,11 @@ name: Release
 #   • push to main  — auto-release on every merge; the bump is inferred from the
 #                     merged commits (breaking → major, feat → minor, else patch).
 #   • workflow_dispatch — manual run from the Actions tab with an explicit bump.
-# Builds, tests, bumps, tags, publishes, and cuts a GitHub Release. No local
-# `npm publish` needed.
+#
+# Tag-driven: the version is derived from the latest git tag (the source of
+# truth), set in the runner, published, and a new tag is pushed. It does NOT
+# commit a version bump to main — main is a protected branch (PRs required), and
+# only tag pushes are allowed there. No local `npm publish` needed.
 on:
   push:
     branches: [main]
@@ -115,54 +118,63 @@ jobs:
             echo "type=patch" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Bump version (local commit + tag)
+      # Compute the next version from the latest tag — tags are the source of
+      # truth, NOT the committed package.json. main is a protected branch (PRs
+      # required, admins enforced), so the release never pushes a commit to main;
+      # deriving from tags removes any dependence on a committed version bump.
+      - name: Compute next version from latest tag
         id: version
         if: steps.bump.outputs.release == 'true'
         run: |
-          npm version ${{ steps.bump.outputs.type }} -m "chore(release): %s"
-          VERSION="$(node -p "require('./package.json').version")"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          LAST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || echo v0.0.0)"
+          CUR="${LAST_TAG#v}"
+          NEXT="$(node -e "const [a,b,c]=('$CUR').split('.').map(Number); const t='${{ steps.bump.outputs.type }}'; const v = t==='major'?[a+1,0,0] : t==='minor'?[a,b+1,0] : [a,b,c+1]; console.log(v.join('.'))")"
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "tag=v$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Releasing v$NEXT (bump: ${{ steps.bump.outputs.type }}, from ${LAST_TAG})"
 
-      # Prove the exact release commit + tag can be pushed BEFORE the irreversible
-      # npm publish — WITHOUT rebasing. A dry-run here fails on any blocker:
-      # branch protection, missing perms, an existing remote tag, OR main having
-      # moved (non-fast-forward). In every case we abort before publishing, so
-      # nothing is stranded and the operator just re-runs. We deliberately do NOT
-      # rebase: the published tarball must match the exact commit that gets tagged
-      # (rebasing would move the tag/provenance onto a tree that was never built
-      # or published — and never tested by this run).
-      - name: Preflight — prove commit + tag are pushable (no rebase)
+      - name: Guard — release tag must not already exist
         if: steps.bump.outputs.release == 'true'
         run: |
-          git push --dry-run origin \
-            "HEAD:main" "refs/tags/v${{ steps.version.outputs.version }}"
+          if git ls-remote --tags --exit-code origin \
+            "refs/tags/${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "::error::${{ steps.version.outputs.tag }} already exists on origin."
+            exit 1
+          fi
 
-      # Publish the exact tree the dry-run just proved pushable. Publishing before
-      # the real push guarantees a failed publish never leaves git ahead of npm.
+      # Set the version in the runner only — NOT committed (main is protected).
+      - name: Set package version (in-runner, not committed)
+        if: steps.bump.outputs.release == 'true'
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version
+
       - name: Publish to npm
         if: steps.bump.outputs.release == 'true'
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Push the same commit + tag (single attempt — no rebase). The preflight
-      # already proved this; only a race in the seconds since could fail it, and
-      # even then we must NOT retarget the tag (it must keep matching the tarball).
-      # On failure we error loudly: npm has the version, git just needs this exact
-      # commit/tag pushed manually.
-      - name: Push commit + tag
+      # Tag the exact commit that was built, tested, and published (HEAD) and push
+      # ONLY the tag — tags aren't PR-gated, so this works under branch protection.
+      # If it fails after publish, npm already has the version; re-push the tag
+      # manually (it points at this run's commit).
+      - name: Tag the release
         if: steps.bump.outputs.release == 'true'
         run: |
-          if ! git push origin \
-            "HEAD:main" "refs/tags/v${{ steps.version.outputs.version }}"; then
-            echo "::error::npm published v${{ steps.version.outputs.version }} but the git push failed (main likely moved since preflight). Push this exact commit + tag manually — do NOT rebase, so the tag keeps matching the published tarball."
-            exit 1
-          fi
+          git tag -a "${{ steps.version.outputs.tag }}" -m "${{ steps.version.outputs.tag }}"
+          for attempt in 1 2 3; do
+            if git push origin "refs/tags/${{ steps.version.outputs.tag }}"; then
+              exit 0
+            fi
+            echo "Tag push failed (attempt $attempt); retrying…"
+            sleep 3
+          done
+          echo "::error::npm published ${{ steps.version.outputs.tag }} but pushing the tag failed. Push it manually: git push origin ${{ steps.version.outputs.tag }}"
+          exit 1
 
       - name: Create GitHub Release
         if: steps.bump.outputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: v${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
           generate_release_notes: true
