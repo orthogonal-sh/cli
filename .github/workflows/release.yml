@@ -27,6 +27,14 @@ jobs:
       contents: write # push the version-bump commit + tag, create the Release
       id-token: write # npm publish --provenance
     steps:
+      # Releases must come from main — workflow_dispatch can be launched from any
+      # branch in the Actions UI, and we must never publish non-main code to npm.
+      - name: Guard — main only
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::Release must be run from 'main' (got ${{ github.ref }})."
+          exit 1
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -55,7 +63,8 @@ jobs:
         id: version
         run: |
           npm version ${{ inputs.bump }} -m "chore(release): %s"
-          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+          VERSION="$(node -p "require('./package.json').version")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       # Publish BEFORE pushing so a failed publish never leaves git ahead of npm
       # (no orphaned version-bump commit or tag on a publish failure).
