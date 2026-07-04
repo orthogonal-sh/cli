@@ -65,6 +65,55 @@ function isBinaryEnvelope(data: unknown): data is BinaryEnvelope {
   );
 }
 
+/**
+ * Render the API's `_orthogonal` self-correction hint (expected schema +
+ * diagnostics) attached to a failed run. The upstream-4xx path returns these
+ * diagnostics ONLY inside `_orthogonal`, so without this they're invisible.
+ */
+function printOrthogonalHint(hint: any): void {
+  if (!hint || typeof hint !== "object") return;
+
+  console.error(chalk.yellow("\nHint:"));
+  if (hint.message) console.error(chalk.gray(`  ${hint.message}`));
+
+  const diagnostics: [string, unknown][] = [
+    ["Missing required query params", hint.missing_required_query],
+    ["Unexpected query fields", hint.unexpected_query_fields],
+    ["Missing required body params", hint.missing_required_body],
+    ["Unexpected body fields", hint.unexpected_body_fields],
+  ];
+  for (const [label, value] of diagnostics) {
+    if (Array.isArray(value) && value.length > 0) {
+      console.error(
+        chalk.gray(`  ${label}: `) + chalk.white((value as string[]).join(", "))
+      );
+    }
+  }
+
+  const summarize = (schema: any, kind: string): void => {
+    if (!schema?.properties) return;
+    const required = new Set<string>(schema.required || []);
+    const names = Object.keys(schema.properties).map((name) => {
+      const prop = schema.properties[name] || {};
+      const bits = [name];
+      if (required.has(name)) bits.push("(required)");
+      const range = [
+        typeof prop.minimum === "number" ? `min ${prop.minimum}` : null,
+        typeof prop.maximum === "number" ? `max ${prop.maximum}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+      if (range) bits.push(`[${range}]`);
+      return bits.join(" ");
+    });
+    if (names.length > 0) {
+      console.error(chalk.gray(`  Expected ${kind}: `) + chalk.white(names.join(", ")));
+    }
+  };
+  summarize(hint.expected_schema?.queryParams, "query params");
+  summarize(hint.expected_schema?.body, "body params");
+}
+
 function formatCost(result: RunResponse): string | null {
   if (result.price) return result.price;
   if (result.priceCents != null && result.priceCents > 0) {
@@ -219,6 +268,15 @@ export async function runCommand(
   } catch (error) {
     spinner.stop();
     console.error(chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`));
+    const hint = (error as { orthogonal?: unknown })?.orthogonal;
+    if (hint) {
+      if (options.raw) {
+        // Machine-readable for agents piping stderr.
+        console.error(JSON.stringify({ _orthogonal: hint }, null, 2));
+      } else {
+        printOrthogonalHint(hint);
+      }
+    }
     process.exit(1);
   }
 }

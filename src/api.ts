@@ -75,8 +75,17 @@ export async function apiRequest<T = unknown>(
 
     // Attach the HTTP status so callers can branch on it reliably instead of
     // string-matching the message (e.g. whoami treating 404 as "no /me").
-    const err = new Error(errorMsg) as Error & { status?: number };
+    const err = new Error(errorMsg) as Error & {
+      status?: number;
+      orthogonal?: unknown;
+    };
     err.status = res.status;
+    // Surface the self-correction hint the API attaches on contract violations
+    // (missing/out-of-range params, upstream 4xx). Without this the run command
+    // only sees `error.message` and the expected-schema diagnostics are lost.
+    if ((data as any)._orthogonal) {
+      err.orthogonal = (data as any)._orthogonal;
+    }
     throw err;
   }
 
