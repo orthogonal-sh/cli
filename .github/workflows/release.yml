@@ -86,17 +86,30 @@ jobs:
             exit 0
           fi
           LAST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
-          RANGE="${LAST_TAG:+$LAST_TAG..}HEAD"
-          if [ "$(git rev-list --count "$RANGE" 2>/dev/null || echo 0)" = "0" ]; then
-            echo "No commits since ${LAST_TAG:-repo start} — skipping release."
+          # No prior release tag → can't scope "changes since last release", so
+          # don't infer semver from the whole repo history; default to patch.
+          if [ -z "$LAST_TAG" ]; then
+            echo "No prior tag — defaulting to patch."
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "type=patch" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          RANGE="$LAST_TAG..HEAD"
+          if [ "$(git rev-list --count "$RANGE")" = "0" ]; then
+            echo "No commits since $LAST_TAG — skipping release."
             echo "release=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "release=true" >> "$GITHUB_OUTPUT"
-          COMMITS="$(git log --format=%s%n%b "$RANGE")"
-          if echo "$COMMITS" | grep -qE "(^|\s)[a-z]+(\(.+\))?!:|BREAKING CHANGE"; then
+          # feat/major intent lives in the SUBJECT line; only "BREAKING CHANGE"
+          # is a footer/body marker. Check them from the right place so a body
+          # line that merely mentions "feat:" can't force a minor bump.
+          SUBJECTS="$(git log --format=%s "$RANGE")"
+          BODIES="$(git log --format=%B "$RANGE")"
+          if echo "$SUBJECTS" | grep -qE "^[a-z]+(\(.+\))?!:" \
+            || echo "$BODIES" | grep -qE "^BREAKING CHANGE:"; then
             echo "type=major" >> "$GITHUB_OUTPUT"
-          elif echo "$COMMITS" | grep -qE "^(feat|feature)(\(.+\))?:"; then
+          elif echo "$SUBJECTS" | grep -qE "^(feat|feature)(\(.+\))?:"; then
             echo "type=minor" >> "$GITHUB_OUTPUT"
           else
             echo "type=patch" >> "$GITHUB_OUTPUT"
