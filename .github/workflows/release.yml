@@ -66,8 +66,24 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      # Publish BEFORE pushing so a failed publish never leaves git ahead of npm
-      # (no orphaned version-bump commit or tag on a publish failure).
+      # Prove the commit + tag can be pushed BEFORE the irreversible npm publish,
+      # so a broken push (branch protection, missing perms, an existing remote
+      # tag) can't strand a published version with no matching git tag/Release.
+      # We rebase onto latest main first (a moved main is fixable, not a blocker)
+      # so the dry-run only fails on genuine push blockers.
+      - name: Preflight — prove commit + tag are pushable
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          git fetch origin main
+          if ! git merge-base --is-ancestor origin/main HEAD; then
+            git tag -d "$tag"
+            git rebase origin/main
+            git tag -a "$tag" -m "$tag"
+          fi
+          git push --dry-run origin "HEAD:main" "refs/tags/$tag"
+
+      # Publish only after the dry-run push succeeded. Publishing before the REAL
+      # push still guarantees a failed publish never leaves git ahead of npm.
       - name: Publish to npm
         run: npm publish --provenance --access public
         env:
