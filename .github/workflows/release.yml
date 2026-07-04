@@ -73,15 +73,26 @@ jobs:
       # Manual runs use the chosen bump; auto (push) runs infer it from the
       # commits since the last tag: a "feat!:"/"BREAKING CHANGE" → major, a
       # "feat:" → minor, anything else → patch.
+      # Manual runs always release with the chosen bump. Auto (push) runs infer
+      # the bump from commits since the last tag — and SKIP entirely when there
+      # are no such commits (e.g. a queued run whose changes a prior run already
+      # released), so we never publish a duplicate/no-op version.
       - name: Determine version bump
         id: bump
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
             echo "type=${{ inputs.bump }}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           LAST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || true)"
           RANGE="${LAST_TAG:+$LAST_TAG..}HEAD"
+          if [ "$(git rev-list --count "$RANGE" 2>/dev/null || echo 0)" = "0" ]; then
+            echo "No commits since ${LAST_TAG:-repo start} — skipping release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "release=true" >> "$GITHUB_OUTPUT"
           COMMITS="$(git log --format=%s%n%b "$RANGE")"
           if echo "$COMMITS" | grep -qE "(^|\s)[a-z]+(\(.+\))?!:|BREAKING CHANGE"; then
             echo "type=major" >> "$GITHUB_OUTPUT"
@@ -93,6 +104,7 @@ jobs:
 
       - name: Bump version (local commit + tag)
         id: version
+        if: steps.bump.outputs.release == 'true'
         run: |
           npm version ${{ steps.bump.outputs.type }} -m "chore(release): %s"
           VERSION="$(node -p "require('./package.json').version")"
@@ -107,6 +119,7 @@ jobs:
       # (rebasing would move the tag/provenance onto a tree that was never built
       # or published — and never tested by this run).
       - name: Preflight — prove commit + tag are pushable (no rebase)
+        if: steps.bump.outputs.release == 'true'
         run: |
           git push --dry-run origin \
             "HEAD:main" "refs/tags/v${{ steps.version.outputs.version }}"
@@ -114,6 +127,7 @@ jobs:
       # Publish the exact tree the dry-run just proved pushable. Publishing before
       # the real push guarantees a failed publish never leaves git ahead of npm.
       - name: Publish to npm
+        if: steps.bump.outputs.release == 'true'
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -124,6 +138,7 @@ jobs:
       # On failure we error loudly: npm has the version, git just needs this exact
       # commit/tag pushed manually.
       - name: Push commit + tag
+        if: steps.bump.outputs.release == 'true'
         run: |
           if ! git push origin \
             "HEAD:main" "refs/tags/v${{ steps.version.outputs.version }}"; then
@@ -132,6 +147,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
+        if: steps.bump.outputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
