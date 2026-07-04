@@ -142,49 +142,34 @@ jobs:
             exit 1
           fi
 
-      # npm is the other source of truth: if a prior run published this version
-      # but then failed to push the tag, the tag guard above passes (tag missing)
-      # yet re-publishing would hard-fail. So check npm and, when the version is
-      # already there, skip publish and just reconcile the missing tag/Release.
-      - name: Check whether this version is already on npm
-        id: npmcheck
-        if: steps.bump.outputs.release == 'true'
-        run: |
-          if npm view "@orth/cli@${{ steps.version.outputs.version }}" version >/dev/null 2>&1; then
-            echo "published=true" >> "$GITHUB_OUTPUT"
-            echo "@orth/cli@${{ steps.version.outputs.version }} is already on npm — skipping publish, will just (re)create the tag."
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          fi
-
       # Set the version in the runner only — NOT committed (main is protected).
       - name: Set package version (in-runner, not committed)
-        if: steps.bump.outputs.release == 'true' && steps.npmcheck.outputs.published != 'true'
+        if: steps.bump.outputs.release == 'true'
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version
 
-      - name: Publish to npm
-        if: steps.bump.outputs.release == 'true' && steps.npmcheck.outputs.published != 'true'
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # Tag the exact commit that was built, tested, and published (HEAD) and push
-      # ONLY the tag — tags aren't PR-gated, so this works under branch protection.
-      # If it fails after publish, npm already has the version; re-push the tag
-      # manually (it points at this run's commit).
-      - name: Tag the release
+      # Tag-first, at the exact commit that was built and tested (HEAD): tag →
+      # publish → (on publish failure) delete the tag. This keeps tagging and
+      # publishing in the SAME run at the SAME commit, so the tag always points at
+      # the published commit — no cross-run "recovery" that could tag a commit
+      # (a moved HEAD) that never produced the tarball. Tags aren't PR-gated, so
+      # this works under branch protection.
+      - name: Tag the release commit
         if: steps.bump.outputs.release == 'true'
         run: |
           git tag -a "${{ steps.version.outputs.tag }}" -m "${{ steps.version.outputs.tag }}"
-          for attempt in 1 2 3; do
-            if git push origin "refs/tags/${{ steps.version.outputs.tag }}"; then
-              exit 0
-            fi
-            echo "Tag push failed (attempt $attempt); retrying…"
-            sleep 3
-          done
-          echo "::error::npm published ${{ steps.version.outputs.tag }} but pushing the tag failed. Push it manually: git push origin ${{ steps.version.outputs.tag }}"
-          exit 1
+          git push origin "refs/tags/${{ steps.version.outputs.tag }}"
+
+      - name: Publish to npm
+        if: steps.bump.outputs.release == 'true'
+        run: |
+          if ! npm publish --provenance --access public; then
+            echo "::error::npm publish failed — removing ${{ steps.version.outputs.tag }} so npm and git stay consistent."
+            git push origin --delete "refs/tags/${{ steps.version.outputs.tag }}" \
+              || echo "::warning::could not delete ${{ steps.version.outputs.tag }}; delete it manually before retrying."
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
         if: steps.bump.outputs.release == 'true'
