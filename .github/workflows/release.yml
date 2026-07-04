@@ -142,13 +142,28 @@ jobs:
             exit 1
           fi
 
+      # npm is the other source of truth: if a prior run published this version
+      # but then failed to push the tag, the tag guard above passes (tag missing)
+      # yet re-publishing would hard-fail. So check npm and, when the version is
+      # already there, skip publish and just reconcile the missing tag/Release.
+      - name: Check whether this version is already on npm
+        id: npmcheck
+        if: steps.bump.outputs.release == 'true'
+        run: |
+          if npm view "@orth/cli@${{ steps.version.outputs.version }}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "@orth/cli@${{ steps.version.outputs.version }} is already on npm — skipping publish, will just (re)create the tag."
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       # Set the version in the runner only — NOT committed (main is protected).
       - name: Set package version (in-runner, not committed)
-        if: steps.bump.outputs.release == 'true'
+        if: steps.bump.outputs.release == 'true' && steps.npmcheck.outputs.published != 'true'
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version --allow-same-version
 
       - name: Publish to npm
-        if: steps.bump.outputs.release == 'true'
+        if: steps.bump.outputs.release == 'true' && steps.npmcheck.outputs.published != 'true'
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
