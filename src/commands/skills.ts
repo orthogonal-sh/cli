@@ -61,8 +61,10 @@ const AGENT_DIRS: Record<string, string> = {
 export function safeSkillFilePath(baseDir: string, filePath: string): string | null {
   const rel = path.normalize(filePath);
   if (path.isAbsolute(rel)) return null;
-  const resolved = path.resolve(baseDir, rel);
-  if (!(resolved + path.sep).startsWith(path.resolve(baseDir) + path.sep)) return null;
+  const base = path.resolve(baseDir);
+  const resolved = path.resolve(base, rel);
+  if (resolved === base) return null; // "" and "." point at the dir itself, not a file
+  if (!(resolved + path.sep).startsWith(base + path.sep)) return null;
   return resolved;
 }
 

@@ -306,6 +306,13 @@ describe("safeSkillFilePath", () => {
     expect(safeSkillFilePath(base, "../evil")).toBeNull();
     expect(safeSkillFilePath(base, "/etc/passwd")).toBeNull();
   });
+
+  // "" and "." resolve to the dir itself, writing there throws EISDIR
+  it("rejects paths that point at the dir itself", () => {
+    expect(safeSkillFilePath(base, "")).toBeNull();
+    expect(safeSkillFilePath(base, ".")).toBeNull();
+    expect(safeSkillFilePath(base, "foo/..")).toBeNull();
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
