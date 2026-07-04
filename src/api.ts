@@ -35,8 +35,10 @@ export async function apiRequest<T = unknown>(
   // or non-JSON body, which would otherwise throw here and lose the status.
   const rawBody = await res.text();
   let data: ApiResponse<T>;
+  let bodyParsed = false;
   try {
     data = (rawBody ? JSON.parse(rawBody) : {}) as ApiResponse<T>;
+    bodyParsed = rawBody.length > 0;
   } catch {
     data = {} as ApiResponse<T>;
   }
@@ -75,8 +77,25 @@ export async function apiRequest<T = unknown>(
 
     // Attach the HTTP status so callers can branch on it reliably instead of
     // string-matching the message (e.g. whoami treating 404 as "no /me").
-    const err = new Error(errorMsg) as Error & { status?: number };
+    const err = new Error(errorMsg) as Error & {
+      status?: number;
+      orthogonal?: unknown;
+      responseBody?: unknown;
+    };
     err.status = res.status;
+    // Surface the self-correction hint the API attaches on contract violations
+    // (missing/out-of-range params, upstream 4xx). Without this the run command
+    // only sees `error.message` and the expected-schema diagnostics are lost.
+    if ((data as any)._orthogonal) {
+      err.orthogonal = (data as any)._orthogonal;
+    }
+    // Keep the full parsed error body too, so callers can render structured
+    // diagnostics (missing / out_of_range) and emit machine-readable JSON.
+    // Only when the body actually parsed as JSON — otherwise a non-JSON body
+    // would surface as `{}` and mask the real error message.
+    if (bodyParsed) {
+      err.responseBody = data;
+    }
     throw err;
   }
 

@@ -65,6 +65,82 @@ function isBinaryEnvelope(data: unknown): data is BinaryEnvelope {
   );
 }
 
+/**
+ * Render the API's self-correction diagnostics attached to a failed run.
+ * Pulls the `_orthogonal` hint (expected schema + field diagnostics) plus the
+ * top-level `missing` / `out_of_range` arrays from the error response body.
+ * The upstream-4xx path returns the schema ONLY inside `_orthogonal`, and the
+ * pre-validation path returns `out_of_range` at the top level — so without this
+ * the concrete violation is invisible in the human output.
+ */
+function printFailureHint(body: any): void {
+  if (!body || typeof body !== "object") return;
+  const hint = body._orthogonal;
+  const hasHint = hint && typeof hint === "object";
+  const outOfRange = Array.isArray(body.out_of_range) ? body.out_of_range : [];
+  const missing = Array.isArray(body.missing) ? body.missing : [];
+  if (!hasHint && outOfRange.length === 0 && missing.length === 0) return;
+
+  console.error(chalk.yellow("\nHint:"));
+  if (hasHint && hint.message) console.error(chalk.gray(`  ${hint.message}`));
+
+  if (missing.length > 0) {
+    console.error(
+      chalk.gray("  Missing required params: ") + chalk.white(missing.join(", "))
+    );
+  }
+  if (outOfRange.length > 0) {
+    const parts = outOfRange.map((p: any) => {
+      const bounds = [
+        typeof p.min === "number" ? `>= ${p.min}` : null,
+        typeof p.max === "number" ? `<= ${p.max}` : null,
+      ]
+        .filter(Boolean)
+        .join(" and ");
+      return bounds ? `${p.name}=${p.value} (must be ${bounds})` : `${p.name}=${p.value}`;
+    });
+    console.error(chalk.gray("  Out of range: ") + chalk.white(parts.join(", ")));
+  }
+
+  if (!hasHint) return;
+  const diagnostics: [string, unknown][] = [
+    ["Missing required query params", hint.missing_required_query],
+    ["Unexpected query fields", hint.unexpected_query_fields],
+    ["Missing required body params", hint.missing_required_body],
+    ["Unexpected body fields", hint.unexpected_body_fields],
+  ];
+  for (const [label, value] of diagnostics) {
+    if (Array.isArray(value) && value.length > 0) {
+      console.error(
+        chalk.gray(`  ${label}: `) + chalk.white((value as string[]).join(", "))
+      );
+    }
+  }
+
+  const summarize = (schema: any, kind: string): void => {
+    if (!schema?.properties) return;
+    const required = new Set<string>(schema.required || []);
+    const names = Object.keys(schema.properties).map((name) => {
+      const prop = schema.properties[name] || {};
+      const bits = [name];
+      if (required.has(name)) bits.push("(required)");
+      const range = [
+        typeof prop.minimum === "number" ? `min ${prop.minimum}` : null,
+        typeof prop.maximum === "number" ? `max ${prop.maximum}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+      if (range) bits.push(`[${range}]`);
+      return bits.join(" ");
+    });
+    if (names.length > 0) {
+      console.error(chalk.gray(`  Expected ${kind}: `) + chalk.white(names.join(", ")));
+    }
+  };
+  summarize(hint.expected_schema?.queryParams, "query params");
+  summarize(hint.expected_schema?.body, "body params");
+}
+
 function formatCost(result: RunResponse): string | null {
   if (result.price) return result.price;
   if (result.priceCents != null && result.priceCents > 0) {
@@ -86,7 +162,10 @@ export async function runCommand(
     dryRun?: boolean;
   }
 ) {
-  const spinner = ora(`Calling ${api}${path}...`).start();
+  // In --raw mode keep the streams clean for piping: don't animate the spinner
+  // on stderr, so a failed call's stderr is a single parseable JSON document.
+  const spinner = ora(`Calling ${api}${path}...`);
+  if (!options.raw) spinner.start();
 
   try {
     // Parse query params
@@ -218,7 +297,26 @@ export async function runCommand(
 
   } catch (error) {
     spinner.stop();
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`));
+    const err = error as {
+      message?: string;
+      status?: number;
+      responseBody?: unknown;
+    };
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (options.raw) {
+      // In --raw mode, stderr must always be a single parseable JSON document
+      // so agents can JSON.parse it. Prefer the server's parsed body; otherwise
+      // (e.g. a non-JSON HTML 502) emit a synthesized error envelope.
+      const envelope = err?.responseBody ?? {
+        success: false,
+        error: message,
+        ...(typeof err?.status === "number" ? { status: err.status } : {}),
+      };
+      console.error(JSON.stringify(envelope, null, 2));
+    } else {
+      console.error(chalk.red(`Error: ${message}`));
+      if (err?.responseBody) printFailureHint(err.responseBody);
+    }
     process.exit(1);
   }
 }
