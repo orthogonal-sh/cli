@@ -169,11 +169,10 @@ orth skills push <slug> [path]     # push local changes to the platform
 orth skills update <slug> [path]   # pull the latest version locally
 orth skills mine                   # list your skills
 orth skills request-verification <slug>
-orth skills publish <slug>         # toggle discoverability
 orth skills request <input>        # request a skill by URL or description
 ```
 
-**Verification workflow:** to make a skill discoverable to others, go `init`/`create` → `submit` → `request-verification`. Once verified, use `publish` to toggle its discoverability.
+**Verification workflow:** to make a skill discoverable to others, go `init`/`create` → `submit` → `request-verification`. Once approved, it becomes discoverable in the library.
 
 ## Scheduled Tasks
 
@@ -240,7 +239,7 @@ Run `orth <command> --help` for the full options on any command.
 | `ORTHOGONAL_API_KEY` | API key; overrides the stored credential (use in CI) |
 | `ORTH_API_URL` | Override the API base URL (advanced) |
 
-Credentials from `orth login` are stored in `~/.config/orthogonal`.
+Credentials from `orth login` are stored in your OS user-config directory (managed automatically); use `orth logout` to remove them.
 
 ## Programmatic Use
 
