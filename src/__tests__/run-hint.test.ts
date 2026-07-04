@@ -48,26 +48,30 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function rejectWithHint(hint: unknown, message = "API request failed with status 400") {
-  const err = new Error(message) as Error & { orthogonal?: unknown };
-  err.orthogonal = hint;
+function rejectWith(responseBody: unknown, message = "API request failed with status 400") {
+  const err = new Error(message) as Error & { responseBody?: unknown };
+  err.responseBody = responseBody;
   mockRun.mockRejectedValue(err);
 }
 
-describe("runCommand — _orthogonal hint", () => {
+describe("runCommand — failure hint", () => {
   it("prints the message and diagnostics from an upstream-4xx hint", async () => {
-    rejectWithHint({
-      error: "orthogonal_endpoint_contract",
-      message: "The upstream API rejected this request.",
-      unexpected_query_fields: ["company"],
-      missing_required_query: ["organization"],
-      expected_schema: {
-        queryParams: {
-          properties: {
-            time_frame: { type: "string" },
-            limit: { type: "number", minimum: 1, maximum: 100 },
+    rejectWith({
+      success: false,
+      error: "API request failed with status 400",
+      _orthogonal: {
+        error: "orthogonal_endpoint_contract",
+        message: "The upstream API rejected this request.",
+        unexpected_query_fields: ["company"],
+        missing_required_query: ["organization"],
+        expected_schema: {
+          queryParams: {
+            properties: {
+              time_frame: { type: "string" },
+              limit: { type: "number", minimum: 1, maximum: 100 },
+            },
+            required: ["time_frame"],
           },
-          required: ["time_frame"],
         },
       },
     });
@@ -84,22 +88,44 @@ describe("runCommand — _orthogonal hint", () => {
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
-  it("emits machine-readable JSON hint in --raw mode", async () => {
-    const hint = {
-      error: "orthogonal_endpoint_contract",
+  it("renders the concrete out_of_range violation", async () => {
+    rejectWith(
+      {
+        success: false,
+        error: "Parameter(s) out of range: limit=1000 (must be <= 100). No credits were charged.",
+        out_of_range: [{ name: "limit", value: 1000, max: 100 }],
+        _orthogonal: { error: "orthogonal_endpoint_contract", message: "Out of range." },
+      },
+      "Parameter(s) out of range: limit=1000 (must be <= 100). No credits were charged."
+    );
+
+    await runCommand("fantastic-jobs", "/v1/active-ats", { method: "GET" });
+
+    const out = errorOutput.join("\n");
+    expect(out).toContain("Out of range: limit=1000 (must be <= 100)");
+    expect(process.exit).toHaveBeenCalledWith(1);
+  });
+
+  it("--raw emits a single parseable JSON document on stderr (no Error: prefix)", async () => {
+    const body = {
+      success: false,
+      error: "Parameter(s) out of range: limit=1000 (must be <= 100).",
       out_of_range: [{ name: "limit", value: 1000, max: 100 }],
+      _orthogonal: { error: "orthogonal_endpoint_contract" },
     };
-    rejectWithHint(hint);
+    rejectWith(body);
 
     await runCommand("fantastic-jobs", "/v1/active-ats", { method: "GET", raw: true });
 
     const out = errorOutput.join("\n");
-    expect(out).toContain('"_orthogonal"');
-    expect(out).toContain('"orthogonal_endpoint_contract"');
+    expect(out.startsWith("Error:")).toBe(false);
+    const parsed = JSON.parse(out);
+    expect(parsed.out_of_range[0].name).toBe("limit");
+    expect(parsed._orthogonal.error).toBe("orthogonal_endpoint_contract");
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
-  it("still exits cleanly when no hint is attached", async () => {
+  it("still exits cleanly when no structured body is attached", async () => {
     mockRun.mockRejectedValue(new Error("Something generic"));
 
     await runCommand("fantastic-jobs", "/v1/active-ats", { method: "GET" });

@@ -66,16 +66,43 @@ function isBinaryEnvelope(data: unknown): data is BinaryEnvelope {
 }
 
 /**
- * Render the API's `_orthogonal` self-correction hint (expected schema +
- * diagnostics) attached to a failed run. The upstream-4xx path returns these
- * diagnostics ONLY inside `_orthogonal`, so without this they're invisible.
+ * Render the API's self-correction diagnostics attached to a failed run.
+ * Pulls the `_orthogonal` hint (expected schema + field diagnostics) plus the
+ * top-level `missing` / `out_of_range` arrays from the error response body.
+ * The upstream-4xx path returns the schema ONLY inside `_orthogonal`, and the
+ * pre-validation path returns `out_of_range` at the top level — so without this
+ * the concrete violation is invisible in the human output.
  */
-function printOrthogonalHint(hint: any): void {
-  if (!hint || typeof hint !== "object") return;
+function printFailureHint(body: any): void {
+  if (!body || typeof body !== "object") return;
+  const hint = body._orthogonal;
+  const hasHint = hint && typeof hint === "object";
+  const outOfRange = Array.isArray(body.out_of_range) ? body.out_of_range : [];
+  const missing = Array.isArray(body.missing) ? body.missing : [];
+  if (!hasHint && outOfRange.length === 0 && missing.length === 0) return;
 
   console.error(chalk.yellow("\nHint:"));
-  if (hint.message) console.error(chalk.gray(`  ${hint.message}`));
+  if (hasHint && hint.message) console.error(chalk.gray(`  ${hint.message}`));
 
+  if (missing.length > 0) {
+    console.error(
+      chalk.gray("  Missing required params: ") + chalk.white(missing.join(", "))
+    );
+  }
+  if (outOfRange.length > 0) {
+    const parts = outOfRange.map((p: any) => {
+      const bounds = [
+        typeof p.min === "number" ? `>= ${p.min}` : null,
+        typeof p.max === "number" ? `<= ${p.max}` : null,
+      ]
+        .filter(Boolean)
+        .join(" and ");
+      return bounds ? `${p.name}=${p.value} (must be ${bounds})` : `${p.name}=${p.value}`;
+    });
+    console.error(chalk.gray("  Out of range: ") + chalk.white(parts.join(", ")));
+  }
+
+  if (!hasHint) return;
   const diagnostics: [string, unknown][] = [
     ["Missing required query params", hint.missing_required_query],
     ["Unexpected query fields", hint.unexpected_query_fields],
@@ -135,7 +162,10 @@ export async function runCommand(
     dryRun?: boolean;
   }
 ) {
-  const spinner = ora(`Calling ${api}${path}...`).start();
+  // In --raw mode keep the streams clean for piping: don't animate the spinner
+  // on stderr, so a failed call's stderr is a single parseable JSON document.
+  const spinner = ora(`Calling ${api}${path}...`);
+  if (!options.raw) spinner.start();
 
   try {
     // Parse query params
@@ -267,15 +297,17 @@ export async function runCommand(
 
   } catch (error) {
     spinner.stop();
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`));
-    const hint = (error as { orthogonal?: unknown })?.orthogonal;
-    if (hint) {
-      if (options.raw) {
-        // Machine-readable for agents piping stderr.
-        console.error(JSON.stringify({ _orthogonal: hint }, null, 2));
-      } else {
-        printOrthogonalHint(hint);
-      }
+    const err = error as {
+      message?: string;
+      responseBody?: unknown;
+    };
+    if (options.raw && err?.responseBody) {
+      // In --raw mode, stderr must be a single parseable JSON document — emit
+      // the error body alone (no "Error:" prefix) so agents can JSON.parse it.
+      console.error(JSON.stringify(err.responseBody, null, 2));
+    } else {
+      console.error(chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`));
+      if (err?.responseBody) printFailureHint(err.responseBody);
     }
     process.exit(1);
   }

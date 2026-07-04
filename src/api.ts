@@ -78,6 +78,7 @@ export async function apiRequest<T = unknown>(
     const err = new Error(errorMsg) as Error & {
       status?: number;
       orthogonal?: unknown;
+      responseBody?: unknown;
     };
     err.status = res.status;
     // Surface the self-correction hint the API attaches on contract violations
@@ -85,6 +86,11 @@ export async function apiRequest<T = unknown>(
     // only sees `error.message` and the expected-schema diagnostics are lost.
     if ((data as any)._orthogonal) {
       err.orthogonal = (data as any)._orthogonal;
+    }
+    // Keep the full parsed error body too, so callers can render structured
+    // diagnostics (missing / out_of_range) and emit machine-readable JSON.
+    if (rawBody) {
+      err.responseBody = data;
     }
     throw err;
   }
