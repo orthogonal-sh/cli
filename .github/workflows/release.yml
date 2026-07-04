@@ -66,49 +66,38 @@ jobs:
           VERSION="$(node -p "require('./package.json').version")"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      # Prove the commit + tag can be pushed BEFORE the irreversible npm publish,
-      # so a broken push (branch protection, missing perms, an existing remote
-      # tag) can't strand a published version with no matching git tag/Release.
-      # We rebase onto latest main first (a moved main is fixable, not a blocker)
-      # so the dry-run only fails on genuine push blockers.
-      - name: Preflight — prove commit + tag are pushable
+      # Prove the exact release commit + tag can be pushed BEFORE the irreversible
+      # npm publish — WITHOUT rebasing. A dry-run here fails on any blocker:
+      # branch protection, missing perms, an existing remote tag, OR main having
+      # moved (non-fast-forward). In every case we abort before publishing, so
+      # nothing is stranded and the operator just re-runs. We deliberately do NOT
+      # rebase: the published tarball must match the exact commit that gets tagged
+      # (rebasing would move the tag/provenance onto a tree that was never built
+      # or published — and never tested by this run).
+      - name: Preflight — prove commit + tag are pushable (no rebase)
         run: |
-          tag="v${{ steps.version.outputs.version }}"
-          git fetch origin main
-          if ! git merge-base --is-ancestor origin/main HEAD; then
-            git tag -d "$tag"
-            git rebase origin/main
-            git tag -a "$tag" -m "$tag"
-          fi
-          git push --dry-run origin "HEAD:main" "refs/tags/$tag"
+          git push --dry-run origin \
+            "HEAD:main" "refs/tags/v${{ steps.version.outputs.version }}"
 
-      # Publish only after the dry-run push succeeded. Publishing before the REAL
-      # push still guarantees a failed publish never leaves git ahead of npm.
+      # Publish the exact tree the dry-run just proved pushable. Publishing before
+      # the real push guarantees a failed publish never leaves git ahead of npm.
       - name: Publish to npm
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # Push the release commit + tag together. If main advanced during the
-      # build/publish window, the push is rejected; we rebase the (version-only)
-      # release commit onto the new main, re-point the tag, and retry — so npm
-      # (already published) and git never drift out of sync.
-      - name: Push commit + tag (rebase-retry if main moved)
+      # Push the same commit + tag (single attempt — no rebase). The preflight
+      # already proved this; only a race in the seconds since could fail it, and
+      # even then we must NOT retarget the tag (it must keep matching the tarball).
+      # On failure we error loudly: npm has the version, git just needs this exact
+      # commit/tag pushed manually.
+      - name: Push commit + tag
         run: |
-          tag="v${{ steps.version.outputs.version }}"
-          for attempt in 1 2 3 4 5; do
-            if git push origin "HEAD:main" "refs/tags/$tag"; then
-              echo "Pushed $tag on attempt $attempt"
-              exit 0
-            fi
-            echo "Push rejected (attempt $attempt) — rebasing onto latest main"
-            git fetch origin main
-            git tag -d "$tag"
-            git rebase origin/main
-            git tag -a "$tag" -m "$tag"
-          done
-          echo "::error::npm already published $tag but git push failed after retries. Reconcile main manually."
-          exit 1
+          if ! git push origin \
+            "HEAD:main" "refs/tags/v${{ steps.version.outputs.version }}"; then
+            echo "::error::npm published v${{ steps.version.outputs.version }} but the git push failed (main likely moved since preflight). Push this exact commit + tag manually — do NOT rebase, so the tag keeps matching the published tarball."
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
