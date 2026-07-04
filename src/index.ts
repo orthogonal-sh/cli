@@ -23,16 +23,6 @@ import {
   skillsMineCommand,
 } from "./commands/skills.js";
 import { apiRequestCommand } from "./commands/apiRequest.js";
-import {
-  tasksListCommand,
-  tasksCreateCommand,
-  tasksShowCommand,
-  tasksDeleteCommand,
-  tasksPauseCommand,
-  tasksResumeCommand,
-  tasksTriggerCommand,
-  tasksLogsCommand,
-} from "./commands/tasks.js";
 import { trackEvent } from "./analytics.js";
 
 /**
@@ -304,82 +294,6 @@ skillsGroup
   .action(asyncAction(async (input: string) => {
     trackEvent("skills.request", { input });
     await skillsRequestCommand(input);
-  }));
-
-// ─────────────────────────────────────────────────────────────────────────────
-// orth tasks <subcommand> — Scheduled task commands
-// ─────────────────────────────────────────────────────────────────────────────
-const tasksGroup = program
-  .command("tasks")
-  .description("Scheduled task commands");
-
-tasksGroup
-  .command("list")
-  .description("List your scheduled tasks")
-  .action(asyncAction(async () => {
-    trackEvent("tasks.list");
-    await tasksListCommand();
-  }));
-
-tasksGroup
-  .command("create")
-  .description("Create a new scheduled task")
-  .requiredOption("-s, --skill <slug>", "Skill to run")
-  .option("-n, --name <name>", "Task name")
-  .option("--schedule <cron>", "Cron expression or preset (every-5-min, every-hour, every-day-9am, every-weekday-9am, every-monday, every-month)")
-  .option("-i, --input <pairs...>", "Skill input as key=value pairs")
-  .action(asyncAction(async (options) => {
-    trackEvent("tasks.create", { skill: options.skill });
-    await tasksCreateCommand(options);
-  }));
-
-tasksGroup
-  .command("show <id>")
-  .description("Show task details")
-  .action(asyncAction(async (id: string) => {
-    trackEvent("tasks.show", { id });
-    await tasksShowCommand(id);
-  }));
-
-tasksGroup
-  .command("delete <id>")
-  .description("Delete a scheduled task")
-  .action(asyncAction(async (id: string) => {
-    trackEvent("tasks.delete", { id });
-    await tasksDeleteCommand(id);
-  }));
-
-tasksGroup
-  .command("pause <id>")
-  .description("Pause a scheduled task")
-  .action(asyncAction(async (id: string) => {
-    trackEvent("tasks.pause", { id });
-    await tasksPauseCommand(id);
-  }));
-
-tasksGroup
-  .command("resume <id>")
-  .description("Resume a paused task")
-  .action(asyncAction(async (id: string) => {
-    trackEvent("tasks.resume", { id });
-    await tasksResumeCommand(id);
-  }));
-
-tasksGroup
-  .command("trigger <id>")
-  .description("Manually trigger a task run")
-  .action(asyncAction(async (id: string) => {
-    trackEvent("tasks.trigger", { id });
-    await tasksTriggerCommand(id);
-  }));
-
-tasksGroup
-  .command("logs <id>")
-  .description("View run history for a task")
-  .option("-l, --limit <number>", "Max results", "10")
-  .action(asyncAction(async (id: string, options) => {
-    trackEvent("tasks.logs", { id });
-    await tasksLogsCommand(id, options);
   }));
 
 // ─────────────────────────────────────────────────────────────────────────────

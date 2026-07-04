@@ -23,7 +23,6 @@ Discover APIs in natural language, call them with a single command, and pay per 
 - [Authentication](#authentication)
 - [Calling APIs](#calling-apis)
 - [Agent Skills](#agent-skills)
-- [Scheduled Tasks](#scheduled-tasks)
 - [Account & Usage](#account--usage)
 - [Command Reference](#command-reference)
 - [Configuration](#configuration)
@@ -174,21 +173,6 @@ orth skills request <input>        # request a skill by URL or description
 
 **Verification workflow:** to make a skill discoverable to others, go `init`/`create` → `submit` → `request-verification`. Once approved, it becomes discoverable in the library.
 
-## Scheduled Tasks
-
-Run API calls and skills on a schedule.
-
-```bash
-orth tasks list                # your scheduled tasks
-orth tasks create              # create a task
-orth tasks show <id>           # task details
-orth tasks trigger <id>        # run it now
-orth tasks logs <id>           # run history
-orth tasks pause <id>          # pause
-orth tasks resume <id>         # resume
-orth tasks delete <id>         # delete
-```
-
 ## Account & Usage
 
 ```bash
@@ -209,7 +193,6 @@ orth usage     # recent API usage
 | `orth api code <slug> <path>` | Generate integration code |
 | `orth api request <docsUrl>` | Request an API to be added |
 | `orth skills …` | Browse, install, author, and publish skills |
-| `orth tasks …` | Create and manage scheduled tasks |
 
 **Shorthand aliases** for the most common commands:
 
