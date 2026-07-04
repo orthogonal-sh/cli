@@ -51,19 +51,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump version
+      - name: Bump version (local commit + tag)
         id: version
         run: |
           npm version ${{ inputs.bump }} -m "chore(release): %s"
           echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
 
-      - name: Push commit + tag
-        run: git push --follow-tags
-
+      # Publish BEFORE pushing so a failed publish never leaves git ahead of npm
+      # (no orphaned version-bump commit or tag on a publish failure).
       - name: Publish to npm
         run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Push commit + tag
+        run: git push --follow-tags
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
