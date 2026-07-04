@@ -46,10 +46,21 @@ jobs:
           echo "::error::Release must be run from 'main' (got ${{ github.ref }})."
           exit 1
 
+      # Mint a token for the orthogonal-release-bot GitHub App. That App is on
+      # main's PR-bypass allowlist, so pushing the version-bump commit with this
+      # token succeeds under branch protection (the default GITHUB_TOKEN can't
+      # bypass and can't be added to the allowlist).
+      - name: Mint GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-node@v4
         with:
@@ -67,8 +78,8 @@ jobs:
 
       - name: Configure git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "orthogonal-release-bot[bot]"
+          git config user.email "orthogonal-release-bot[bot]@users.noreply.github.com"
 
       # Manual runs use the chosen bump; auto (push) runs infer it from the
       # commits since the last tag: a "feat!:"/"BREAKING CHANGE" → major, a
