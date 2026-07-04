@@ -125,6 +125,22 @@ describe("runCommand — failure hint", () => {
     expect(process.exit).toHaveBeenCalledWith(1);
   });
 
+  it("--raw emits a JSON envelope even when there is no parseable body", async () => {
+    const err = new Error("API request failed with status 502") as Error & { status?: number };
+    err.status = 502;
+    mockRun.mockRejectedValue(err);
+
+    await runCommand("fantastic-jobs", "/v1/active-ats", { method: "GET", raw: true });
+
+    const out = errorOutput.join("\n");
+    expect(out.startsWith("Error:")).toBe(false);
+    const parsed = JSON.parse(out);
+    expect(parsed.success).toBe(false);
+    expect(parsed.status).toBe(502);
+    expect(parsed.error).toContain("502");
+    expect(process.exit).toHaveBeenCalledWith(1);
+  });
+
   it("still exits cleanly when no structured body is attached", async () => {
     mockRun.mockRejectedValue(new Error("Something generic"));
 

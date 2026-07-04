@@ -299,14 +299,22 @@ export async function runCommand(
     spinner.stop();
     const err = error as {
       message?: string;
+      status?: number;
       responseBody?: unknown;
     };
-    if (options.raw && err?.responseBody) {
-      // In --raw mode, stderr must be a single parseable JSON document — emit
-      // the error body alone (no "Error:" prefix) so agents can JSON.parse it.
-      console.error(JSON.stringify(err.responseBody, null, 2));
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (options.raw) {
+      // In --raw mode, stderr must always be a single parseable JSON document
+      // so agents can JSON.parse it. Prefer the server's parsed body; otherwise
+      // (e.g. a non-JSON HTML 502) emit a synthesized error envelope.
+      const envelope = err?.responseBody ?? {
+        success: false,
+        error: message,
+        ...(typeof err?.status === "number" ? { status: err.status } : {}),
+      };
+      console.error(JSON.stringify(envelope, null, 2));
     } else {
-      console.error(chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`));
+      console.error(chalk.red(`Error: ${message}`));
       if (err?.responseBody) printFailureHint(err.responseBody);
     }
     process.exit(1);
