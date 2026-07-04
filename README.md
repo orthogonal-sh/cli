@@ -77,7 +77,7 @@ orth balance
 ## Authentication
 
 ```bash
-# Log in with your API key (stored in ~/.config/orthogonal)
+# Log in with your API key (stored in your OS user-config directory)
 orth login --key orth_live_your_key
 
 # …or use an environment variable (takes precedence — great for CI)
