@@ -35,8 +35,10 @@ export async function apiRequest<T = unknown>(
   // or non-JSON body, which would otherwise throw here and lose the status.
   const rawBody = await res.text();
   let data: ApiResponse<T>;
+  let bodyParsed = false;
   try {
     data = (rawBody ? JSON.parse(rawBody) : {}) as ApiResponse<T>;
+    bodyParsed = rawBody.length > 0;
   } catch {
     data = {} as ApiResponse<T>;
   }
@@ -89,7 +91,9 @@ export async function apiRequest<T = unknown>(
     }
     // Keep the full parsed error body too, so callers can render structured
     // diagnostics (missing / out_of_range) and emit machine-readable JSON.
-    if (rawBody) {
+    // Only when the body actually parsed as JSON — otherwise a non-JSON body
+    // would surface as `{}` and mask the real error message.
+    if (bodyParsed) {
       err.responseBody = data;
     }
     throw err;
