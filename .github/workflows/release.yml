@@ -73,8 +73,26 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Push commit + tag
-        run: git push --follow-tags
+      # Push the release commit + tag together. If main advanced during the
+      # build/publish window, the push is rejected; we rebase the (version-only)
+      # release commit onto the new main, re-point the tag, and retry — so npm
+      # (already published) and git never drift out of sync.
+      - name: Push commit + tag (rebase-retry if main moved)
+        run: |
+          tag="v${{ steps.version.outputs.version }}"
+          for attempt in 1 2 3 4 5; do
+            if git push origin "HEAD:main" "refs/tags/$tag"; then
+              echo "Pushed $tag on attempt $attempt"
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt) — rebasing onto latest main"
+            git fetch origin main
+            git tag -d "$tag"
+            git rebase origin/main
+            git tag -a "$tag" -m "$tag"
+          done
+          echo "::error::npm already published $tag but git push failed after retries. Reconcile main manually."
+          exit 1
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
