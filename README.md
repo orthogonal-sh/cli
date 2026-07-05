@@ -226,11 +226,10 @@ Credentials from `orth login` are stored in your OS user-config directory (manag
 
 ## Programmatic Use
 
-Building an application instead of scripting the terminal? Use the official TypeScript SDK, [`@orth/sdk`](https://www.npmjs.com/package/@orth/sdk):
+Building an application instead of scripting the terminal? Use one of the official SDKs:
 
-```bash
-npm install @orth/sdk
-```
+- **[`@orth/sdk`](https://www.npmjs.com/package/@orth/sdk)** — TypeScript/JavaScript (`npm install @orth/sdk`)
+- **[`orth`](https://pypi.org/project/orth/)** — Python (`pip install orth`)
 
 ## Development
 
