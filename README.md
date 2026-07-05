@@ -2,9 +2,9 @@
 
 # Orthogonal CLI
 
-**One command line for every API and agent skill on the [Orthogonal](https://orthogonal.com) platform.**
+**Command-line tool for the [Orthogonal](https://orthogonal.com) platform — discover and call APIs and agent skills from your terminal.**
 
-Discover APIs in natural language, call them with a single command, and pay per request from your Orthogonal credit balance — no per-provider signups, keys, or contracts.
+Search for APIs in natural language, call them with a single command, and pay per request from your Orthogonal credit balance.
 
 [![npm version](https://img.shields.io/npm/v/@orth/cli.svg?logo=npm&color=cb3837)](https://www.npmjs.com/package/@orth/cli)
 [![npm downloads](https://img.shields.io/npm/dm/@orth/cli.svg?color=cb3837)](https://www.npmjs.com/package/@orth/cli)
@@ -32,7 +32,7 @@ Discover APIs in natural language, call them with a single command, and pay per 
 
 ## Why Orthogonal
 
-Orthogonal is a marketplace of production APIs and agent skills behind one account and one balance. The CLI lets you — and your AI agents — find and call any of them without leaving the terminal:
+Orthogonal puts a catalog of APIs and agent skills behind one account and one balance. The CLI lets you — and your AI agents — find and call them without leaving the terminal:
 
 - **Discover** APIs and skills with natural-language search.
 - **Call** any endpoint with one command — auth, billing, and routing are handled for you.
@@ -96,7 +96,7 @@ Get an API key from your [Orthogonal dashboard](https://orthogonal.com/dashboard
 ### Discover & inspect
 
 ```bash
-# Natural-language search across the marketplace
+# Natural-language search across the catalog
 orth api search "generate images"
 
 # List every available API
