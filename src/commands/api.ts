@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import ora from "ora";
 import { search, getDetails, getApiBySlug, listApis, SearchResponse, DetailsResponse } from "../api.js";
+import { formatEndpointReference } from "../endpointReference.js";
 
 interface ApiOptions {
   x402?: boolean;
@@ -188,7 +189,9 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
                   ? chalk.dim(ep)
                   : chalk.dim(`$${parseFloat(Number(ep).toFixed(4))}`);
             })();
-        console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
+        console.log(
+          `${method} ${chalk.white(formatEndpointReference(api.slug, endpoint))} ${price}`,
+        );
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
         }
@@ -225,7 +228,9 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
                   ? chalk.dim(ep2)
                   : chalk.dim(`$${parseFloat(Number(ep2).toFixed(4))}`);
             })();
-        console.log(`${method} ${chalk.white(endpoint.path)} ${price}`);
+        console.log(
+          `${method} ${chalk.white(formatEndpointReference(api.slug, endpoint))} ${price}`,
+        );
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
         }
