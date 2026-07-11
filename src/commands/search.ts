@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import ora from "ora";
 import { search, SearchResponse } from "../api.js";
+import { formatEndpointReference } from "../endpointReference.js";
 
 export async function searchCommand(query: string, options: { limit: string }) {
   const spinner = ora("Searching APIs...").start();
@@ -24,7 +25,7 @@ export async function searchCommand(query: string, options: { limit: string }) {
         console.log(
           chalk.gray("  ") +
           chalk.yellow(method) +
-          chalk.white(endpoint.path)
+          chalk.white(formatEndpointReference(api.slug, endpoint))
         );
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));

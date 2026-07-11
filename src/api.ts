@@ -108,6 +108,7 @@ export interface SearchResponse {
     name: string;
     slug: string;
     endpoints: Array<{
+      apiSlug?: string;
       path: string;
       method: string;
       description: string;
@@ -194,9 +195,10 @@ export interface ListApisResponse {
     name: string;
     slug: string;
     description?: string;
-    baseUrl: string;
+    baseUrl?: string;
     verified: boolean;
     endpoints: Array<{
+      apiSlug?: string;
       path: string;
       method: string;
       description?: string;
@@ -233,6 +235,7 @@ export interface ApiBySlugResponse {
   };
   endpoints: Array<{
     id: string;
+    apiSlug?: string;
     path: string;
     method: string;
     description?: string;
