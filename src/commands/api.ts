@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import ora from "ora";
 import { search, getDetails, getApiBySlug, listApis, SearchResponse, DetailsResponse } from "../api.js";
+import { readX402PaymentDetails } from "../x402.js";
 
 interface ApiOptions {
   x402?: boolean;
@@ -151,7 +152,7 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
               fetchOptions.body = '{}';
             }
             const response = await fetch(x402Url, fetchOptions);
-            const responseData = await response.json();
+            const responseData = await readX402PaymentDetails(response);
             console.log(chalk.bold.magenta("\n── x402 Payment Details ──\n"));
             console.log(chalk.cyan(`URL: ${x402Url}`));
             console.log(chalk.yellow(`Method: ${method}`));
