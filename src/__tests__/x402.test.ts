@@ -81,4 +81,10 @@ describe("readX402PaymentDetails", () => {
       body: { error: "bad challenge" },
     });
   });
+
+  it("rejects an empty response with no payment challenge", async () => {
+    await expect(readX402PaymentDetails(response(""))).rejects.toThrow(
+      "No x402 payment details found in response header or body",
+    );
+  });
 });

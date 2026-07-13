@@ -55,5 +55,6 @@ export async function readX402PaymentDetails(
     return parsedBody ?? rawBody;
   }
 
-  return paymentRequired ? { paymentRequired } : {};
+  if (paymentRequired) return { paymentRequired };
+  throw new Error("No x402 payment details found in response header or body");
 }
