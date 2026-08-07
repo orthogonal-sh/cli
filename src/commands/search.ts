@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import ora from "ora";
 import { search, SearchResponse } from "../api.js";
+import { sanitizeForTerminal } from "../utils.js";
 
 export async function searchCommand(query: string, options: { limit: string }) {
   const spinner = ora("Searching APIs...").start();
@@ -21,10 +22,18 @@ export async function searchCommand(query: string, options: { limit: string }) {
       
       for (const endpoint of api.endpoints.slice(0, 3)) {
         const method = endpoint.method.padEnd(6);
+        // Group members commonly collide on the same upstream path (e.g.
+        // AbstractAPI's many products all expose "/v1") — when the endpoint's
+        // own callable slug differs from the card's flat slug, show it so the
+        // right identifier is obvious before calling `orth run`.
+        const memberTag = endpoint.apiSlug && endpoint.apiSlug !== api.slug
+          ? chalk.dim(`  [${sanitizeForTerminal(endpoint.apiSlug)}]`)
+          : "";
         console.log(
           chalk.gray("  ") +
           chalk.yellow(method) +
-          chalk.white(endpoint.path)
+          chalk.white(endpoint.path) +
+          memberTag
         );
         if (endpoint.description) {
           console.log(chalk.gray(`       ${endpoint.description.slice(0, 80)}${endpoint.description.length > 80 ? "..." : ""}`));
