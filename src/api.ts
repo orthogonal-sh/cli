@@ -114,6 +114,11 @@ export interface SearchResponse {
       price?: number;
       hasDynamicPricing?: boolean;
       pricing_formula?: string;
+      // Set when this endpoint belongs to a group member whose upstream path
+      // collides with siblings (e.g. AbstractAPI's many products all on "/v1").
+      // The callable identifier for that specific member, e.g. "abstractapi/avatars" —
+      // distinct from the card's flat `slug` above.
+      apiSlug?: string;
     }>;
   }>;
   count: number;
@@ -243,6 +248,10 @@ export interface ApiBySlugResponse {
     docsUrl?: string;
     queryParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
     bodyParams?: Array<{ name: string; type: string; required: boolean; description?: string }>;
+    // Set when `slug` resolved to a group: the callable identifier for the
+    // specific member that owns this endpoint (e.g. "abstractapi/avatars"),
+    // needed because group members commonly collide on the same upstream path.
+    apiSlug?: string;
   }>;
   count: number;
 }
