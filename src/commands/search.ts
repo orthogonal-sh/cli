@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import ora from "ora";
 import { search, SearchResponse } from "../api.js";
+import { sanitizeForTerminal } from "../utils.js";
 
 export async function searchCommand(query: string, options: { limit: string }) {
   const spinner = ora("Searching APIs...").start();
@@ -26,7 +27,7 @@ export async function searchCommand(query: string, options: { limit: string }) {
         // own callable slug differs from the card's flat slug, show it so the
         // right identifier is obvious before calling `orth run`.
         const memberTag = endpoint.apiSlug && endpoint.apiSlug !== api.slug
-          ? chalk.dim(`  [${endpoint.apiSlug}]`)
+          ? chalk.dim(`  [${sanitizeForTerminal(endpoint.apiSlug)}]`)
           : "";
         console.log(
           chalk.gray("  ") +
