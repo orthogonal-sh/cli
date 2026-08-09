@@ -45,6 +45,7 @@ import {
   skillsShowCommand,
   skillsCreateCommand,
   skillsInstallCommand,
+  safeSkillFilePath,
   skillsInitCommand,
   skillsSubmitCommand,
   skillsRequestVerificationCommand,
@@ -282,6 +283,35 @@ describe("skillsInstallCommand", () => {
 
     expect(console.error).toHaveBeenCalled();
     expect(process.exit).toHaveBeenCalledWith(1);
+  });
+});
+
+describe("safeSkillFilePath", () => {
+  const base = path.join(os.tmpdir(), "skills", "a");
+
+  it("allows normal nested paths", () => {
+    expect(safeSkillFilePath(base, "SKILL.md")).toBe(path.join(base, "SKILL.md"));
+    expect(safeSkillFilePath(base, "scripts/run.sh")).toBe(path.join(base, "scripts", "run.sh"));
+  });
+
+  // old regex reassembled ....// into ../ and escaped; normalize treats .... as a literal dir so it stays in base
+  it("neutralizes the ....// reassembly escape", () => {
+    for (const p of ["....//anything-evil/payload.sh", "....//....//x-escape"]) {
+      const r = safeSkillFilePath(base, p);
+      expect(r === null || (r + path.sep).startsWith(base + path.sep)).toBe(true);
+    }
+  });
+
+  it("rejects plain traversal and absolute paths", () => {
+    expect(safeSkillFilePath(base, "../evil")).toBeNull();
+    expect(safeSkillFilePath(base, "/etc/passwd")).toBeNull();
+  });
+
+  // "" and "." resolve to the dir itself, writing there throws EISDIR
+  it("rejects paths that point at the dir itself", () => {
+    expect(safeSkillFilePath(base, "")).toBeNull();
+    expect(safeSkillFilePath(base, ".")).toBeNull();
+    expect(safeSkillFilePath(base, "foo/..")).toBeNull();
   });
 });
 
