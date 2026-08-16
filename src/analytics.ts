@@ -1,6 +1,9 @@
+import { readFileSync } from "fs";
+import { join } from "path";
 import { getApiKey } from "./config.js";
 
-const CLI_VERSION = process.env.npm_package_version || "0.2.0";
+const CLI_VERSION = process.env.npm_package_version ||
+  JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8")).version;
 const BASE_URL = "https://api.orthogonal.com/v1";
 
 /**

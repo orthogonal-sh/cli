@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "fs";
+import { join } from "path";
 import { Command } from "commander";
+
+const CLI_VERSION = JSON.parse(
+  readFileSync(join(__dirname, "..", "package.json"), "utf-8")
+).version;
 import { searchCommand } from "./commands/search.js";
 import { runCommand } from "./commands/run.js";
 import { apiCommand } from "./commands/api.js";
@@ -44,7 +50,7 @@ const program = new Command();
 program
   .name("orth")
   .description("CLI to access all APIs and skills on the Orthogonal platform")
-  .version("0.2.0");
+  .version(CLI_VERSION);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth commands (top-level)
