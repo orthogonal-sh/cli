@@ -55,7 +55,6 @@ describe("searchCommand", () => {
 
   it("rethrows failed searches so the caller can track the failure", async () => {
     mockSearch.mockRejectedValue(new Error("Search failed"));
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     await expect(searchCommand("weather", { limit: "10" }))
       .rejects.toThrow("Search failed");

@@ -212,11 +212,6 @@ export async function skillsSearchCommand(
     return data;
   } catch (error) {
     spinner.stop();
-    console.error(
-      chalk.red(
-        `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
-      ),
-    );
     throw error;
   }
 }

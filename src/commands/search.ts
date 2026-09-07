@@ -53,7 +53,6 @@ export async function searchCommand(query: string, options: { limit: string }) {
 
   } catch (error) {
     spinner.stop();
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : "Unknown error"}`));
     throw error;
   }
 }

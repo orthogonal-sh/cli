@@ -150,8 +150,6 @@ describe("skillsSearchCommand", () => {
 
     await expect(skillsSearchCommand("test", { limit: "10" }))
       .rejects.toThrow("Search failed");
-
-    expect(console.error).toHaveBeenCalled();
   });
 });
 
