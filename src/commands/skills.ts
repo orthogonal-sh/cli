@@ -217,7 +217,7 @@ export async function skillsSearchCommand(
         `Error: ${error instanceof Error ? error.message : "Unknown error"}`,
       ),
     );
-    process.exit(1);
+    throw error;
   }
 }
 

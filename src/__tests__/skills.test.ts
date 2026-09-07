@@ -148,10 +148,10 @@ describe("skillsSearchCommand", () => {
   it("should handle API errors", async () => {
     mockApiRequest.mockRejectedValue(new Error("Search failed"));
 
-    await skillsSearchCommand("test", { limit: "10" });
+    await expect(skillsSearchCommand("test", { limit: "10" }))
+      .rejects.toThrow("Search failed");
 
     expect(console.error).toHaveBeenCalled();
-    expect(process.exit).toHaveBeenCalledWith(1);
   });
 });
 
