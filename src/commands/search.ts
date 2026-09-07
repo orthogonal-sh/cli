@@ -12,7 +12,7 @@ export async function searchCommand(query: string, options: { limit: string }) {
     
     if (!data.results || data.results.length === 0) {
       console.log(chalk.yellow("No APIs found matching your query."));
-      return;
+      return data;
     }
 
     console.log(chalk.bold(`\nFound ${data.apisCount} APIs with ${data.count} matching endpoints:\n`));
@@ -48,6 +48,8 @@ export async function searchCommand(query: string, options: { limit: string }) {
 
     console.log(chalk.gray(`Run 'orth api <slug>' to see all endpoints for an API`));
     console.log(chalk.gray(`Run 'orth run <api> <path>' to call an endpoint`));
+
+    return data;
 
   } catch (error) {
     spinner.stop();

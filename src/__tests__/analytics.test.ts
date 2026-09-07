@@ -71,6 +71,18 @@ describe("trackEvent", () => {
     expect(body.timestamp).toBeDefined();
   });
 
+  it("should include a search response", () => {
+    mockGetApiKey.mockReturnValue("orth_live_abc123");
+    const response = { results: [{ name: "Weather" }], count: 1 };
+
+    trackEvent("api.search", { query: "weather" }, response);
+
+    const body = JSON.parse(
+      (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body,
+    );
+    expect(body.response).toEqual(response);
+  });
+
   it("should not throw on fetch failure", () => {
     mockGetApiKey.mockReturnValue("orth_live_abc123");
     vi.stubGlobal("fetch", vi.fn(() => Promise.reject(new Error("network"))));

@@ -186,7 +186,7 @@ export async function skillsSearchCommand(
 
     if (!data.results || data.results.length === 0) {
       console.log(chalk.yellow("No skills found matching your query."));
-      return;
+      return data;
     }
 
     console.log(chalk.bold(`\nFound ${data.count} skills:\n`));
@@ -209,6 +209,7 @@ export async function skillsSearchCommand(
     }
 
     console.log(chalk.gray("Run 'orth skills show <slug>' for full details"));
+    return data;
   } catch (error) {
     spinner.stop();
     console.error(

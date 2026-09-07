@@ -124,8 +124,8 @@ apiGroup
   .description("Search for APIs using natural language")
   .option("-l, --limit <number>", "Max results", "10")
   .action(asyncAction(async (query: string, options) => {
-    trackEvent("api.search", { query });
-    await searchCommand(query, options);
+    const response = await searchCommand(query, options);
+    trackEvent("api.search", { query }, response);
   }));
 
 apiGroup
@@ -195,8 +195,8 @@ skillsGroup
   .description("Search for agent skills")
   .option("-l, --limit <number>", "Max results", "20")
   .action(asyncAction(async (query: string, options) => {
-    trackEvent("skills.search", { query });
-    await skillsSearchCommand(query, options);
+    const response = await skillsSearchCommand(query, options);
+    trackEvent("skills.search", { query }, response);
   }));
 
 skillsGroup
@@ -304,8 +304,8 @@ program
   .description("Search for APIs (alias for 'orth api search')")
   .option("-l, --limit <number>", "Max results", "10")
   .action(asyncAction(async (query: string, options) => {
-    trackEvent("search", { query });
-    await searchCommand(query, options);
+    const response = await searchCommand(query, options);
+    trackEvent("search", { query }, response);
   }));
 
 program

@@ -10,6 +10,7 @@ const BASE_URL = "https://api.orthogonal.com/v1";
 export function trackEvent(
   command: string,
   args?: Record<string, string | undefined>,
+  response?: unknown,
 ): void {
   // Don't track if no API key (not authenticated)
   const apiKey = getApiKey();
@@ -18,6 +19,7 @@ export function trackEvent(
   const payload = {
     command,
     args: args ? sanitizeArgs(args) : undefined,
+    response,
     cliVersion: CLI_VERSION,
     os: process.platform,
     nodeVersion: process.version,
