@@ -27,16 +27,34 @@ import { trackEvent } from "./analytics.js";
 
 /**
  * Wraps an async action callback so that rejected promises are caught,
- * logged, and cause the process to exit with code 1.  Without this,
+ * logged, and set the process exit code to 1. Without this,
  * Commander.js silently swallows unhandled rejections from async actions.
  */
 function asyncAction(fn: (...args: any[]) => Promise<void>) {
   return (...args: any[]) => {
     fn(...args).catch((err: unknown) => {
       console.error(err instanceof Error ? err.message : "Unknown error");
-      process.exit(1);
+      // Avoid a hard exit so fire-and-forget failure analytics can flush.
+      process.exitCode = 1;
     });
   };
+}
+
+async function runTrackedSearch<T>(
+  command: string,
+  query: string,
+  operation: () => Promise<T>,
+): Promise<void> {
+  try {
+    const response = await operation();
+    trackEvent(command, { query }, response);
+  } catch (error) {
+    trackEvent(command, { query }, {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+    throw error;
+  }
 }
 
 const program = new Command();
@@ -124,8 +142,7 @@ apiGroup
   .description("Search for APIs using natural language")
   .option("-l, --limit <number>", "Max results", "10")
   .action(asyncAction(async (query: string, options) => {
-    trackEvent("api.search", { query });
-    await searchCommand(query, options);
+    await runTrackedSearch("api.search", query, () => searchCommand(query, options));
   }));
 
 apiGroup
@@ -195,8 +212,8 @@ skillsGroup
   .description("Search for agent skills")
   .option("-l, --limit <number>", "Max results", "20")
   .action(asyncAction(async (query: string, options) => {
-    trackEvent("skills.search", { query });
-    await skillsSearchCommand(query, options);
+    await runTrackedSearch("skills.search", query, () =>
+      skillsSearchCommand(query, options));
   }));
 
 skillsGroup
@@ -304,8 +321,7 @@ program
   .description("Search for APIs (alias for 'orth api search')")
   .option("-l, --limit <number>", "Max results", "10")
   .action(asyncAction(async (query: string, options) => {
-    trackEvent("search", { query });
-    await searchCommand(query, options);
+    await runTrackedSearch("search", query, () => searchCommand(query, options));
   }));
 
 program

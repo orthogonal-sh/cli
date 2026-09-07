@@ -127,29 +127,29 @@ describe("skillsSearchCommand", () => {
       count: 1,
     });
 
-    await skillsSearchCommand("react", { limit: "10" });
+    const result = await skillsSearchCommand("react", { limit: "10" });
 
     expect(mockApiRequest).toHaveBeenCalledWith("/skills/search", {
       method: "POST",
       body: { query: "react", limit: 10 },
     });
+    expect(result).toEqual(expect.objectContaining({ count: 1 }));
   });
 
   it("should handle no results", async () => {
     mockApiRequest.mockResolvedValue({ results: [], count: 0 });
 
-    await skillsSearchCommand("nonexistent", { limit: "10" });
+    const result = await skillsSearchCommand("nonexistent", { limit: "10" });
 
     expect(console.log).toHaveBeenCalled();
+    expect(result).toEqual({ results: [], count: 0 });
   });
 
   it("should handle API errors", async () => {
     mockApiRequest.mockRejectedValue(new Error("Search failed"));
 
-    await skillsSearchCommand("test", { limit: "10" });
-
-    expect(console.error).toHaveBeenCalled();
-    expect(process.exit).toHaveBeenCalledWith(1);
+    await expect(skillsSearchCommand("test", { limit: "10" }))
+      .rejects.toThrow("Search failed");
   });
 });
 

@@ -1,7 +1,11 @@
 import { getApiKey } from "./config.js";
 
 const CLI_VERSION = process.env.npm_package_version || "0.2.0";
-const BASE_URL = "https://api.orthogonal.com/v1";
+const PRODUCTION_BASE_URL = "https://api.orthogonal.com/v1";
+
+function getAnalyticsBaseUrl(): string {
+  return process.env.ORTH_API_URL || PRODUCTION_BASE_URL;
+}
 
 /**
  * Fire-and-forget analytics event for CLI usage tracking.
@@ -10,6 +14,7 @@ const BASE_URL = "https://api.orthogonal.com/v1";
 export function trackEvent(
   command: string,
   args?: Record<string, string | undefined>,
+  response?: unknown,
 ): void {
   // Don't track if no API key (not authenticated)
   const apiKey = getApiKey();
@@ -18,6 +23,7 @@ export function trackEvent(
   const payload = {
     command,
     args: args ? sanitizeArgs(args) : undefined,
+    response,
     cliVersion: CLI_VERSION,
     os: process.platform,
     nodeVersion: process.version,
@@ -26,7 +32,7 @@ export function trackEvent(
   };
 
   // Fire and forget - don't await, don't catch visible errors
-  fetch(`${BASE_URL}/cli/events`, {
+  fetch(`${getAnalyticsBaseUrl()}/cli/events`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
