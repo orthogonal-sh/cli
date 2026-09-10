@@ -57,6 +57,17 @@ const AGENT_DIRS: Record<string, string> = {
   openclaw: path.join(os.homedir(), ".openclaw", "skills"),
 };
 
+// path.normalize kills the ....// reassembly trick, +sep on both ends stops sibling-prefix escapes
+export function safeSkillFilePath(baseDir: string, filePath: string): string | null {
+  const rel = path.normalize(filePath);
+  if (path.isAbsolute(rel)) return null;
+  const base = path.resolve(baseDir);
+  const resolved = path.resolve(base, rel);
+  if (resolved === base) return null; // "" and "." point at the dir itself, not a file
+  if (!(resolved + path.sep).startsWith(base + path.sep)) return null;
+  return resolved;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // orth skills list
 // ─────────────────────────────────────────────────────────────────────────────
@@ -434,13 +445,10 @@ export async function skillsInstallCommand(
         // Create directories
         fs.mkdirSync(skillDir, { recursive: true });
 
-        // Write all files (with path traversal protection)
+        // Write all files
         for (const file of skill.files) {
-          // Sanitize file path to prevent path traversal
-          const sanitized = file.filePath.replace(/\.\.\//g, "").replace(/\.\.\\/g, "");
-          const filePath = path.resolve(skillDir, sanitized);
-          // Ensure resolved path is within skillDir
-          if (!filePath.startsWith(path.resolve(skillDir))) {
+          const filePath = safeSkillFilePath(skillDir, file.filePath);
+          if (!filePath) {
             console.log(chalk.yellow(`  Skipped unsafe file path: ${file.filePath}`));
             continue;
           }
@@ -966,11 +974,8 @@ export async function skillsUpdateCommand(
 
     // Write all files
     for (const file of skill.files) {
-      // Sanitize file path to prevent path traversal
-      const sanitized = file.filePath.replace(/\.\.\//g, "").replace(/\.\.\\/g, "");
-      const filePath = path.resolve(dirPath, sanitized);
-      // Ensure resolved path is within dirPath
-      if (!filePath.startsWith(path.resolve(dirPath))) {
+      const filePath = safeSkillFilePath(dirPath, file.filePath);
+      if (!filePath) {
         console.log(chalk.yellow(`  Skipped unsafe file path: ${file.filePath}`));
         continue;
       }
