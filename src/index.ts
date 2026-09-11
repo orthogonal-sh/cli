@@ -23,7 +23,7 @@ import {
   skillsMineCommand,
 } from "./commands/skills.js";
 import { apiRequestCommand } from "./commands/apiRequest.js";
-import { trackEvent } from "./analytics.js";
+import { getSearchFailureResponse, trackEvent } from "./analytics.js";
 
 /**
  * Wraps an async action callback so that rejected promises are caught,
@@ -49,10 +49,7 @@ async function runTrackedSearch<T>(
     const response = await operation();
     trackEvent(command, { query }, response);
   } catch (error) {
-    trackEvent(command, { query }, {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    trackEvent(command, { query }, getSearchFailureResponse(error));
     throw error;
   }
 }

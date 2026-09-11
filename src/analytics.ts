@@ -7,6 +7,21 @@ function getAnalyticsBaseUrl(): string {
   return process.env.ORTH_API_URL || PRODUCTION_BASE_URL;
 }
 
+/** Preserve the server correlation ID when search errors become CLI telemetry. */
+export function getSearchFailureResponse(error: unknown) {
+  const responseBody = error && typeof error === "object" && "responseBody" in error
+    ? error.responseBody : undefined;
+  const searchEventId = responseBody && typeof responseBody === "object" &&
+    "searchEventId" in responseBody && typeof responseBody.searchEventId === "string"
+    ? responseBody.searchEventId : undefined;
+
+  return {
+    success: false,
+    error: error instanceof Error ? error.message : "Unknown error",
+    ...(searchEventId ? { searchEventId } : {}),
+  };
+}
+
 /**
  * Fire-and-forget analytics event for CLI usage tracking.
  * Never blocks, never throws, never shows errors to the user.

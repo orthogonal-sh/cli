@@ -5,7 +5,7 @@ vi.mock("../config.js", () => ({
 }));
 
 import { getApiKey } from "../config.js";
-import { trackEvent } from "../analytics.js";
+import { getSearchFailureResponse, trackEvent } from "../analytics.js";
 
 const mockGetApiKey = getApiKey as ReturnType<typeof vi.fn>;
 
@@ -20,6 +20,27 @@ afterEach(() => {
 });
 
 describe("trackEvent", () => {
+  it("preserves a failed search's correlation ID in the posted analytics", () => {
+    mockGetApiKey.mockReturnValue("orth_live_abc123");
+    const searchEventId = "11111111-1111-4111-8111-111111111111";
+    const error = Object.assign(new Error("Search unavailable"), {
+      responseBody: { success: false, searchEventId },
+    });
+
+    trackEvent("api.search", { query: "weather" }, getSearchFailureResponse(error));
+
+    const payload = JSON.parse((fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body);
+    expect(payload.response).toEqual({ success: false, error: "Search unavailable", searchEventId });
+  });
+
+  it.each([undefined, null, {}, { searchEventId: 123 }])("retains errors without a correlation ID (%j)", (responseBody) => {
+    const error = Object.assign(new Error("Search failed"), { responseBody });
+    expect(getSearchFailureResponse(error)).toEqual({ success: false, error: "Search failed" });
+  });
+
+  it("handles non-Error failures", () => {
+    expect(getSearchFailureResponse("network failure")).toEqual({ success: false, error: "Unknown error" });
+  });
   it("should not track if no API key", () => {
     mockGetApiKey.mockReturnValue(null);
 
