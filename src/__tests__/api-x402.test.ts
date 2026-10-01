@@ -48,6 +48,31 @@ describe("orth api show --x402", () => {
     expect(logged.join("\n")).not.toContain("x402.orth.sh");
   });
 
+  it("--x402-full fetches the server's URL and prints the 402 details", async () => {
+    vi.mocked(getDetails).mockResolvedValue({
+      ...details,
+      usage: { x402: "https://mono.orthogonal.com/pay/exa/search" },
+    });
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 402,
+      json: async () => ({ x402Version: 1, accepts: [] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      await apiCommand("exa", "/search", { x402Full: true });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://mono.orthogonal.com/pay/exa/search",
+      { method: "GET" },
+    );
+    const output = logged.join("\n");
+    expect(output).toContain("URL: https://mono.orthogonal.com/pay/exa/search");
+    expect(output).toContain("Status: 402");
+    expect(output).toContain('"x402Version": 1');
+  });
+
   it("falls back to x402.orth.sh when the server names none", async () => {
     vi.mocked(getDetails).mockResolvedValue(details);
     await apiCommand("exa", "/search", { x402: true });
