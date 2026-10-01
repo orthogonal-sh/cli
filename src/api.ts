@@ -126,6 +126,8 @@ export interface SearchResponse {
 }
 
 export interface DetailsResponse {
+  /** How to call the endpoint; x402 is the server's pay-per-call URL. */
+  usage?: { runApi?: string; x402?: string };
   api?: string | { name: string; slug: string; description?: string };
   path?: string;
   method?: string;

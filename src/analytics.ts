@@ -1,6 +1,6 @@
 import { getApiKey } from "./config.js";
+import { CLI_VERSION } from "./version.js";
 
-const CLI_VERSION = process.env.npm_package_version || "0.2.0";
 const PRODUCTION_BASE_URL = "https://api.orthogonal.com/v1";
 
 function getAnalyticsBaseUrl(): string {
