@@ -24,6 +24,7 @@ import {
 } from "./commands/skills.js";
 import { apiRequestCommand } from "./commands/apiRequest.js";
 import { getSearchFailureResponse, trackEvent } from "./analytics.js";
+import { CLI_VERSION } from "./version.js";
 
 /**
  * Wraps an async action callback so that rejected promises are caught,
@@ -59,7 +60,7 @@ const program = new Command();
 program
   .name("orth")
   .description("CLI to access all APIs and skills on the Orthogonal platform")
-  .version("0.2.0");
+  .version(CLI_VERSION);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Auth commands (top-level)

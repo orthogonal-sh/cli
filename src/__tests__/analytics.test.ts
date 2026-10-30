@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+import path from "path";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("../config.js", () => ({
@@ -91,6 +93,27 @@ describe("trackEvent", () => {
     expect(body.os).toBeDefined();
     expect(body.nodeVersion).toBeDefined();
     expect(body.timestamp).toBeDefined();
+  });
+
+  it("reports the CLI's own version, even when run inside another npm project", async () => {
+    // npm run / npx set npm_package_version to the project's version; the
+    // old fallback reported that, or a hard-coded "0.2.0" outside npm.
+    vi.stubEnv("npm_package_version", "7.7.7");
+    vi.resetModules();
+    const config = await import("../config.js");
+    (config.getApiKey as ReturnType<typeof vi.fn>).mockReturnValue("orth_live_abc123");
+    const analytics = await import("../analytics.js");
+
+    analytics.trackEvent("whoami");
+
+    const body = JSON.parse(
+      (fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].body,
+    );
+    const pkg = JSON.parse(
+      readFileSync(path.join(__dirname, "..", "..", "package.json"), "utf8"),
+    );
+    expect(body.cliVersion).toBe(pkg.version);
+    vi.unstubAllEnvs();
   });
 
   it("should include a search response", () => {

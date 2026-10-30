@@ -136,7 +136,9 @@ export async function apiCommand(slug?: string, path?: string, options?: ApiOpti
 
       // x402 direct payment info
       if (options?.x402 || options?.x402Full) {
-        const x402Url = `https://x402.orth.sh/${slug}${path}`;
+        // The server names its own pay-per-call URL (prod: x402.orthogonal.com,
+        // another backend: its own), so it follows ORTH_API_URL.
+        const x402Url = data.usage?.x402 ?? `https://x402.orth.sh/${slug}${path}`;
         // Determine HTTP method: POST if body params, GET otherwise
         const method = bodyParams.length > 0 ? 'POST' : 'GET';
         
