@@ -289,9 +289,9 @@ export async function runCommand(
       console.log(JSON.stringify(result.data, null, 2));
     }
 
-    // Show price if returned
+    // Keep --raw stdout as a single JSON document for pipelines.
     const cost3 = formatCost(result);
-    if (cost3) {
+    if (cost3 && !options.raw) {
       console.log(chalk.dim(`\nCost: ${cost3}`));
     }
 
